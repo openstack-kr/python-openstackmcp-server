@@ -1,0 +1,18 @@
+[project]
+name = "python-openstackmcp-server"
+version = "0.1.0"
+description = "A MCP server providing OpenStack services for MCP clients"
+readme = "README.md"
+requires-python = ">=3.10"
+dependencies = [
+    "mcp[cli]>=1.12.0",
+    "openstacksdk>=4.6.0",
+    "pydantic>=2.11.7",
+]
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/openstack_mcp_server"]
