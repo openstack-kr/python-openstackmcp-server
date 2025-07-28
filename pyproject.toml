@@ -10,7 +10,7 @@ dependencies = [
     "pydantic>=2.11.7",
 ]
 
-[project.optional-dependencies]
+[project.dependency-group]
 test = [
     "pytest>=8.4.1",
 ]
