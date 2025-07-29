@@ -8,6 +8,7 @@ dependencies = [
     "mcp[cli]>=1.12.0",
     "openstacksdk>=4.6.0",
     "pydantic>=2.11.7",
+    "ruff>=0.12.5",
 ]
 
 [project.dependency-group]
@@ -29,3 +30,24 @@ testpaths = ["tests"]
 python_files = ["test_*.py", "*_test.py"]
 python_classes = ["Test*"]
 python_functions = ["test_*"]
+
+
+[tool.ruff]
+line-length = 79
+
+[tool.ruff.format]
+quote-style = "double"
+indent-style = "space"
+line-ending = "auto"
+docstring-code-format = true
+
+[tool.ruff.lint]
+select = ["C", "E", "F", "S", "U", "I"]
+ignore = ["C901", "E501"]
+
+[tool.ruff.lint.isort]
+lines-after-imports = 2
+no-sections = true
+
+[tool.ruff.lint.pydocstyle]
+convention = "google"

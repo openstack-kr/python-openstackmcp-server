@@ -1,7 +1,8 @@
-import sys
-import signal
 import argparse
 import logging
+import signal
+import sys
+
 
 # Configure root logger
 logging.basicConfig(

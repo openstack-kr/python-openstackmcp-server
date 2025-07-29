@@ -1,6 +1,7 @@
 import os
 from pathlib import Path
 
+
 # Transport protocol
 MCP_TRANSPORT = os.environ.get("TRANSPORT", "stdio")
 
