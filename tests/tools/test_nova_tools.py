@@ -1,4 +1,3 @@
-import pytest
 from openstack_mcp_server.tools.nova_tools import NovaTools
 
 
@@ -13,9 +12,13 @@ class TestNovaTools:
 
         # Assert
         mock_fastmcp.tool.assert_called_once()
-        mock_fastmcp.tool().assert_called_once_with(nova_tools.get_nova_servers)
+        mock_fastmcp.tool().assert_called_once_with(
+            nova_tools.get_nova_servers
+        )
 
-    def test_get_nova_servers(self, mock_openstack_logging, mock_openstack_connect, sample_servers):
+    def test_get_nova_servers(
+        self, mock_openstack_logging, mock_openstack_connect, sample_servers
+    ):
         """Test getting Nova servers list."""
         # Arrange
         mock_conn = mock_openstack_connect.return_value
@@ -26,12 +29,16 @@ class TestNovaTools:
         result = nova_tools.get_nova_servers()
 
         # Assert
-        expected = "server1 (id1) - Status: ACTIVE\nserver2 (id2) - Status: STOPPED"
+        expected = (
+            "server1 (id1) - Status: ACTIVE\nserver2 (id2) - Status: STOPPED"
+        )
         assert result == expected
         mock_openstack_logging.assert_called_once_with(debug=True)
-        mock_openstack_connect.assert_called_once_with(cloud='openstack')
+        mock_openstack_connect.assert_called_once_with(cloud="openstack")
 
-    def test_get_nova_servers_empty_list(self, mock_openstack_logging, mock_openstack_connect):
+    def test_get_nova_servers_empty_list(
+        self, mock_openstack_logging, mock_openstack_connect
+    ):
         """Test getting Nova servers when no servers exist."""
         # Arrange
         mock_conn = mock_openstack_connect.return_value
@@ -44,7 +51,9 @@ class TestNovaTools:
         # Assert
         assert result == ""
 
-    def test_get_nova_servers_single_server(self, mock_openstack_connection, mock_server):
+    def test_get_nova_servers_single_server(
+        self, mock_openstack_connection, mock_server
+    ):
         """Test getting single Nova server."""
         # Arrange
         mock_conn, mock_connect = mock_openstack_connection
