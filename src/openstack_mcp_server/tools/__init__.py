@@ -1,7 +1,7 @@
 from mcp.server.fastmcp import FastMCP
 
 
-def register_tool(mcp : FastMCP):
+def register_tool(mcp: FastMCP):
     """
     Register Openstack MCP tools.
     """

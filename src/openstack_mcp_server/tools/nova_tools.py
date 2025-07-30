@@ -21,21 +21,22 @@ class NovaTools:
 
     def get_nova_servers(self) -> str:
         """
-            Get the list of Nova servers by invoking the registered tool.
+        Get the list of Nova servers by invoking the registered tool.
 
-            :return: A string containing the names, IDs, and statuses of the servers.
-            """
+        :return: A string containing the names, IDs, and statuses of the servers.
+        """
 
         # Initialize and turn on debug logging
         openstack.enable_logging(debug=True)
 
         # Initialize connection
-        conn = openstack.connect(cloud='openstack')
+        conn = openstack.connect(cloud="openstack")
 
         # List the servers
         server_list = []
         for server in conn.list_servers():
             server_list.append(
-                f"{server.name} ({server.id}) - Status: {server.status}")
+                f"{server.name} ({server.id}) - Status: {server.status}"
+            )
 
         return "\n".join(server_list)

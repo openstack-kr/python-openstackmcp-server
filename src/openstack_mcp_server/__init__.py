@@ -8,7 +8,7 @@ import sys
 logging.basicConfig(
     level=logging.INFO,
     format="%(asctime)s - %(name)s - %(levelname)s - %(message)s",
-    handlers=[logging.StreamHandler(sys.stderr)]
+    handlers=[logging.StreamHandler(sys.stderr)],
 )
 logger = logging.getLogger("openstack-mcp-server")
 
@@ -25,6 +25,7 @@ def main():
         # Import here to avoid circular imports
         from openstack_mcp_server.config import MCP_TRANSPORT
         from openstack_mcp_server.server import serve
+
         parser = argparse.ArgumentParser(
             description="Openstack MCP Server",
         )
@@ -36,13 +37,16 @@ def main():
         # Validate transport protocol
         if MCP_TRANSPORT not in ["stdio", "sse", "streamable-http"]:
             logger.error(
-                f"Invalid transport protocol: {MCP_TRANSPORT}. Using stdio instead.")
+                f"Invalid transport protocol: {MCP_TRANSPORT}. Using stdio instead."
+            )
             transport = "stdio"
         else:
             transport = MCP_TRANSPORT
 
         # Start the server
-        logger.info(f"Starting Openstack MCP Server with {transport} transport")
+        logger.info(
+            f"Starting Openstack MCP Server with {transport} transport"
+        )
 
         args = parser.parse_args()
 
