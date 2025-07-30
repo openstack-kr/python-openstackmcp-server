@@ -37,6 +37,10 @@ python_functions = ["test_*"]
 
 [tool.ruff]
 line-length = 79
+exclude = [
+    "tests",
+    "docs",
+]
 
 [tool.ruff.format]
 quote-style = "double"
