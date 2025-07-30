@@ -51,4 +51,3 @@ no-sections = true
 
 [tool.ruff.lint.pydocstyle]
 convention = "google"
-
