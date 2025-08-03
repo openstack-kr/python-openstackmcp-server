@@ -1,5 +1,5 @@
 from .base import get_openstack_conn
-from mcp.server.fastmcp import FastMCP
+from fastmcp import FastMCP
 
 
 class NovaTools:
