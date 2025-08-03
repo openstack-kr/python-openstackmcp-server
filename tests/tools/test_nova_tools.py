@@ -1,69 +1,169 @@
+import pytest
+from unittest.mock import Mock
 from openstack_mcp_server.tools.nova_tools import NovaTools
 
 
 class TestNovaTools:
-    def test_register_tools(self, mock_fastmcp):
-        """Test that tools are properly registered with FastMCP."""
-        # Arrange
+    """Test cases for NovaTools class."""
+
+    def test_get_nova_servers_success(self, mock_get_openstack_conn):
+        """Test getting nova servers successfully."""
+        mock_conn = mock_get_openstack_conn
+
+        # Create mock server objects
+        mock_server1 = Mock()
+        mock_server1.name = "web-server-01"
+        mock_server1.id = "abc123-def456-ghi789"
+        mock_server1.status = "ACTIVE"
+
+        mock_server2 = Mock()
+        mock_server2.name = "db-server-01"
+        mock_server2.id = "xyz789-uvw456-rst123"
+        mock_server2.status = "SHUTOFF"
+
+        # Configure mock compute.list_servers()
+        mock_conn.compute.list_servers.return_value = [mock_server1, mock_server2]
+
+        # Test NovaTools
         nova_tools = NovaTools()
-
-        # Act
-        nova_tools.register_tools(mock_fastmcp)
-
-        # Assert
-        mock_fastmcp.tool.assert_called_once()
-        mock_fastmcp.tool().assert_called_once_with(
-            nova_tools.get_nova_servers
-        )
-
-    def test_get_nova_servers(
-        self, mock_openstack_logging, mock_openstack_connect, sample_servers
-    ):
-        """Test getting Nova servers list."""
-        # Arrange
-        mock_conn = mock_openstack_connect.return_value
-        mock_conn.list_servers.return_value = sample_servers
-        nova_tools = NovaTools()
-
-        # Act
         result = nova_tools.get_nova_servers()
 
-        # Assert
-        expected = (
-            "server1 (id1) - Status: ACTIVE\nserver2 (id2) - Status: STOPPED"
+        # Verify results
+        expected_output = (
+            "web-server-01 (abc123-def456-ghi789) - Status: ACTIVE\n"
+            "db-server-01 (xyz789-uvw456-rst123) - Status: SHUTOFF"
         )
-        assert result == expected
-        mock_openstack_logging.assert_called_once_with(debug=True)
-        mock_openstack_connect.assert_called_once_with(cloud="openstack")
+        assert result == expected_output
 
-    def test_get_nova_servers_empty_list(
-        self, mock_openstack_logging, mock_openstack_connect
-    ):
-        """Test getting Nova servers when no servers exist."""
-        # Arrange
-        mock_conn = mock_openstack_connect.return_value
-        mock_conn.list_servers.return_value = []
+        # Verify mock calls
+        mock_conn.compute.list_servers.assert_called_once()
+
+    def test_get_nova_servers_empty_list(self, mock_get_openstack_conn):
+        """Test getting nova servers when no servers exist."""
+        mock_conn = mock_get_openstack_conn
+
+        # Empty server list
+        mock_conn.compute.list_servers.return_value = []
+
         nova_tools = NovaTools()
-
-        # Act
         result = nova_tools.get_nova_servers()
 
-        # Assert
+        # Verify empty string
         assert result == ""
 
-    def test_get_nova_servers_single_server(
-        self, mock_openstack_connection, mock_server
-    ):
-        """Test getting single Nova server."""
-        # Arrange
-        mock_conn, mock_connect = mock_openstack_connection
-        test_server = mock_server("web-server", "web-001", "BUILDING")
-        mock_conn.list_servers.return_value = [test_server]
-        nova_tools = NovaTools()
+        mock_conn.compute.list_servers.assert_called_once()
 
-        # Act
+    def test_get_nova_servers_single_server(self, mock_get_openstack_conn):
+        """Test getting nova servers with a single server."""
+        mock_conn = mock_get_openstack_conn
+
+        # Single server
+        mock_server = Mock()
+        mock_server.name = "test-server"
+        mock_server.id = "single-123"
+        mock_server.status = "BUILDING"
+
+        mock_conn.compute.list_servers.return_value = [mock_server]
+
+        nova_tools = NovaTools()
         result = nova_tools.get_nova_servers()
 
-        # Assert
-        expected = "web-server (web-001) - Status: BUILDING"
-        assert result == expected
+        expected_output = "test-server (single-123) - Status: BUILDING"
+        assert result == expected_output
+
+        mock_conn.compute.list_servers.assert_called_once()
+
+    def test_get_nova_servers_multiple_statuses(self, mock_get_openstack_conn):
+        """Test servers with various statuses."""
+        mock_conn = mock_get_openstack_conn
+
+        # Servers with different statuses
+        servers_data = [
+            ("server-active", "id-1", "ACTIVE"),
+            ("server-shutoff", "id-2", "SHUTOFF"),
+            ("server-error", "id-3", "ERROR"),
+            ("server-building", "id-4", "BUILDING"),
+            ("server-paused", "id-5", "PAUSED"),
+        ]
+
+        mock_servers = []
+        for name, server_id, status in servers_data:
+            mock_server = Mock()
+            mock_server.name = name
+            mock_server.id = server_id
+            mock_server.status = status
+            mock_servers.append(mock_server)
+
+        mock_conn.compute.list_servers.return_value = mock_servers
+
+        nova_tools = NovaTools()
+        result = nova_tools.get_nova_servers()
+
+        # Verify each server is included in the result
+        for name, server_id, status in servers_data:
+            expected_line = f"{name} ({server_id}) - Status: {status}"
+            assert expected_line in result
+
+        # Verify line count (5 servers)
+        assert len(result.split('\n')) == 5
+
+        mock_conn.compute.list_servers.assert_called_once()
+
+    def test_get_nova_servers_with_special_characters(self, mock_get_openstack_conn):
+        """Test servers with special characters in names."""
+        mock_conn = mock_get_openstack_conn
+
+        # Server names with special characters
+        mock_server1 = Mock()
+        mock_server1.name = "web-server_test-01"
+        mock_server1.id = "id-with-dashes"
+        mock_server1.status = "ACTIVE"
+
+        mock_server2 = Mock()
+        mock_server2.name = "db.server.prod"
+        mock_server2.id = "id.with.dots"
+        mock_server2.status = "SHUTOFF"
+
+        mock_conn.compute.list_servers.return_value = [mock_server1, mock_server2]
+
+        nova_tools = NovaTools()
+        result = nova_tools.get_nova_servers()
+
+        assert "web-server_test-01 (id-with-dashes) - Status: ACTIVE" in result
+        assert "db.server.prod (id.with.dots) - Status: SHUTOFF" in result
+
+        mock_conn.compute.list_servers.assert_called_once()
+
+    def test_register_tools(self):
+        """Test that tools are properly registered with FastMCP."""
+        # Create FastMCP mock
+        mock_mcp = Mock()
+        mock_tool_decorator = Mock()
+        mock_mcp.tool.return_value = mock_tool_decorator
+
+        nova_tools = NovaTools()
+        nova_tools.register_tools(mock_mcp)
+
+        # Verify mcp.tool() was called
+        mock_mcp.tool.assert_called_once()
+
+        # Verify decorator was applied to get_nova_servers method
+        mock_tool_decorator.assert_called_once_with(nova_tools.get_nova_servers)
+
+    def test_nova_tools_instantiation(self):
+        """Test NovaTools can be instantiated."""
+        nova_tools = NovaTools()
+        assert nova_tools is not None
+        assert hasattr(nova_tools, 'register_tools')
+        assert hasattr(nova_tools, 'get_nova_servers')
+        assert callable(nova_tools.register_tools)
+        assert callable(nova_tools.get_nova_servers)
+
+    def test_get_nova_servers_docstring(self):
+        """Test that get_nova_servers has proper docstring."""
+        nova_tools = NovaTools()
+        docstring = nova_tools.get_nova_servers.__doc__
+
+        assert docstring is not None
+        assert "Get the list of Nova servers" in docstring
+        assert "return" in docstring.lower() or "Return" in docstring

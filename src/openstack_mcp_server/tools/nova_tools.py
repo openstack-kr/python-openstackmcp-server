@@ -1,4 +1,4 @@
-import openstack
+from .base import get_openstack_conn
 from mcp.server.fastmcp import FastMCP
 
 
@@ -6,11 +6,6 @@ class NovaTools:
     """
     A class to encapsulate Nova-related tools and utilities.
     """
-
-    def __init__(self):
-        """
-        Initialize the NovaTools with a FastMCP instance.
-        """
 
     def register_tools(self, mcp: FastMCP):
         """
@@ -25,16 +20,12 @@ class NovaTools:
 
         :return: A string containing the names, IDs, and statuses of the servers.
         """
-
-        # Initialize and turn on debug logging
-        openstack.enable_logging(debug=True)
-
         # Initialize connection
-        conn = openstack.connect(cloud="openstack")
+        conn = get_openstack_conn()
 
         # List the servers
         server_list = []
-        for server in conn.list_servers():
+        for server in conn.compute.list_servers():
             server_list.append(
                 f"{server.name} ({server.id}) - Status: {server.status}"
             )
