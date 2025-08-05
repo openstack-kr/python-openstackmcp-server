@@ -1,8 +1,11 @@
 from fastmcp import FastMCP
 from pydantic import BaseModel
+from typing import Optional
 
 from .base import get_openstack_conn
 
+# NOTE: In openstacksdk, all of the fields are optional.
+# In this case, we are only using description field as optional.
 class Region(BaseModel):
     id: str
     description: Optional[str] = None
@@ -18,6 +21,7 @@ class KeystoneTools:
         """
 
         mcp.tool()(self.get_regions)
+        mcp.tool()(self.create_region)
 
     def get_regions(self) -> list[Region]:
         """
@@ -35,4 +39,20 @@ class KeystoneTools:
             
         return region_list
     
+    def create_region(self, id: str, description: Optional[str] = None) -> Region:
+        """
+        Create a new region.
+        
+        :param id: The ID of the region.
+        :param description: The description of the region. It can be None.
+        
+        :return: The created Region object.
+        """
+        # Initialize connection
+        conn = get_openstack_conn()
+
+        # Create the region
+        region = conn.identity.create_region(id=id, description=description)
+
+        return Region(id=region.id, description=region.description)
     

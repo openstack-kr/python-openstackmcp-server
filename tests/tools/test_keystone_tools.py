@@ -56,4 +56,58 @@ class TestKeystoneTools:
         # Verify mock calls
         mock_conn.identity.regions.assert_called_once()
 
+   def test_create_region_success(self, mock_get_openstack_conn_keystone):
+        """Test creating a keystone region successfully."""
+        mock_conn = mock_get_openstack_conn_keystone
+        
+        # Arrange
+        mock_region = Mock()
+        mock_region.id = "RegionOne"
+        mock_region.name = "Region One"
+        mock_region.description = "Region One description"
+        
+        mock_conn.identity.create_region.return_value = mock_region
+        
+        # Act
+        keystone_tools = self.get_keystone_tools()
+        result = keystone_tools.create_region(id="RegionOne", description="Region One description")
+        
+        # Assert
+        assert result == Region(id="RegionOne", description="Region One description")
+
+        # Verify mock calls
+        mock_conn.identity.create_region.assert_called_once_with(id="RegionOne", description="Region One description")
     
+    def test_create_region_without_description(self, mock_get_openstack_conn_keystone):
+        """Test creating a keystone region without a description."""
+        mock_conn = mock_get_openstack_conn_keystone
+        
+        # Arrange
+        mock_region = Mock()
+        mock_region.id = "RegionOne"
+        
+        mock_conn.identity.create_region.return_value = mock_region
+        
+        # Act
+        keystone_tools = self.get_keystone_tools()
+        result = keystone_tools.create_region(id="RegionOne")
+        
+        # Assert
+        assert result == Region(id="RegionOne")
+
+    def test_create_region_invalid_id_format(self, mock_get_openstack_conn_keystone):
+        """Test creating a keystone region with an invalid ID format."""
+        mock_conn = mock_get_openstack_conn_keystone
+        
+        # Arrange
+        mock_conn.identity.create_region.side_effect = exceptions.BadRequestException(
+            "Invalid input for field 'id': Expected string, got integer"
+        )
+        
+        # Act
+        keystone_tools = self.get_keystone_tools()
+        with pytest.raises(exceptions.BadRequestException, match="Invalid input for field 'id': Expected string, got integer"):
+            keystone_tools.create_region(id=1, description="Region One description")
+        
+        # Assert
+        mock_conn.identity.create_region.assert_called_once_with(id=1, description="Region One description") 
