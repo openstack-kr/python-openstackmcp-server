@@ -5,8 +5,7 @@ from .base import get_openstack_conn
 
 class Region(BaseModel):
     id: str
-    name: str
-    description: str
+    description: Optional[str] = None
 
 class KeystoneTools:
     """
@@ -35,5 +34,5 @@ class KeystoneTools:
             region_list.append(Region(id=region.id, name=region.name, description=region.description))
             
         return region_list
-        
+    
     

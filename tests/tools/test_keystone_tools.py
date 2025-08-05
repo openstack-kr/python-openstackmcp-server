@@ -1,5 +1,6 @@
 import pytest
 from unittest.mock import Mock
+from openstack import exceptions
 from openstack_mcp_server.tools.keystone_tools import KeystoneTools, Region
 
 
@@ -18,12 +19,10 @@ class TestKeystoneTools:
         # Create mock region objects
         mock_region1 = Mock()
         mock_region1.id = "RegionOne"
-        mock_region1.name = "Region One"
         mock_region1.description = "Region One description"
 
         mock_region2 = Mock()
         mock_region2.id = "RegionTwo"
-        mock_region2.name = "Region Two"
         mock_region2.description = "Region Two description"
                 
         # Configure mock identity.regions()
@@ -34,10 +33,27 @@ class TestKeystoneTools:
         result = keystone_tools.get_regions()
 
         # Assert
-        assert result == [Region(id="RegionOne", name="Region One", description="Region One description"),
-                          Region(id="RegionTwo", name="Region Two", description="Region Two description")]
+        assert result == [Region(id="RegionOne", description="Region One description"),
+                          Region(id="RegionTwo", description="Region Two description")]
 
         # Verify mock calls
         mock_conn.identity.regions.assert_called_once()
 
-                
+    def test_get_regions_empty(self, mock_get_openstack_conn_keystone):
+        """Test getting keystone regions when there are no regions."""
+        mock_conn = mock_get_openstack_conn_keystone
+        
+        # Arrange
+        mock_conn.identity.regions.return_value = []
+        
+        # Act
+        keystone_tools = self.get_keystone_tools()
+        result = keystone_tools.get_regions()
+
+        # Assert
+        assert result == []
+
+        # Verify mock calls
+        mock_conn.identity.regions.assert_called_once()
+
+    
