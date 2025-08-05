@@ -1,7 +1,6 @@
 from fastmcp import FastMCP
 from pydantic import BaseModel
 from typing import Optional
-
 from .base import get_openstack_conn
 
 # NOTE: In openstacksdk, all of the fields are optional.
