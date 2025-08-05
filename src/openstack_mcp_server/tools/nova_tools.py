@@ -1,14 +1,6 @@
 from .base import get_openstack_conn
 from fastmcp import FastMCP
-from pydantic import BaseModel
-
-
-class Server(BaseModel):
-    """A model to represent a Nova server."""
-
-    name: str
-    id: str
-    status: str
+from openstack_mcp_server.tools.response.nova import Server
 
 
 class NovaTools:

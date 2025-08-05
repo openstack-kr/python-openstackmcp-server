@@ -1,6 +1,6 @@
-import pytest
 from unittest.mock import Mock, call
-from openstack_mcp_server.tools.nova_tools import NovaTools, Server
+from openstack_mcp_server.tools.response.nova import Server
+from openstack_mcp_server.tools.nova_tools import NovaTools
 
 
 class TestNovaTools:
