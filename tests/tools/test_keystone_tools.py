@@ -56,14 +56,13 @@ class TestKeystoneTools:
         # Verify mock calls
         mock_conn.identity.regions.assert_called_once()
 
-   def test_create_region_success(self, mock_get_openstack_conn_keystone):
+    def test_create_region_success(self, mock_get_openstack_conn_keystone):
         """Test creating a keystone region successfully."""
         mock_conn = mock_get_openstack_conn_keystone
         
         # Arrange
         mock_region = Mock()
         mock_region.id = "RegionOne"
-        mock_region.name = "Region One"
         mock_region.description = "Region One description"
         
         mock_conn.identity.create_region.return_value = mock_region
@@ -85,6 +84,7 @@ class TestKeystoneTools:
         # Arrange
         mock_region = Mock()
         mock_region.id = "RegionOne"
+        mock_region.description = None
         
         mock_conn.identity.create_region.return_value = mock_region
         
@@ -111,3 +111,4 @@ class TestKeystoneTools:
         
         # Assert
         mock_conn.identity.create_region.assert_called_once_with(id=1, description="Region One description") 
+    
