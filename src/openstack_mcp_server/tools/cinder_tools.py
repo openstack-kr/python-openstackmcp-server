@@ -104,9 +104,9 @@ class CinderTools:
         self,
         name: str,
         size: int,
-        description: str = "",
-        volume_type: str = "",
-        availability_zone: str = "",
+        description: str | None = None,
+        volume_type: str | None = None,
+        availability_zone: str | None = None,
     ) -> VolumeCreateResult:
         """
         Create a new volume.
@@ -125,11 +125,11 @@ class CinderTools:
             "size": size,
         }
 
-        if description:
+        if description is not None:
             volume_kwargs["description"] = description
-        if volume_type:
+        if volume_type is not None:
             volume_kwargs["volume_type"] = volume_type
-        if availability_zone:
+        if availability_zone is not None:
             volume_kwargs["availability_zone"] = availability_zone
 
         volume = conn.block_storage.create_volume(**volume_kwargs)
