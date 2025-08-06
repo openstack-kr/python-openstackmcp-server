@@ -4,9 +4,6 @@ from openstack_mcp_server.tools.cinder_tools import CinderTools
 from openstack_mcp_server.resources.cinder import (
     Volume,
     VolumeAttachment,
-    VolumeCreateResult,
-    VolumeDeleteResult,
-    VolumeExtendResult,
 )
 
 
@@ -336,19 +333,14 @@ class TestCinderTools:
         cinder_tools = CinderTools()
         result = cinder_tools.create_volume("new-volume", 10, "Test volume", "ssd", "nova")
 
-        # Verify result is a VolumeCreateResult object
-        assert isinstance(result, VolumeCreateResult)
-
-        
-        # Verify volume details
-        volume = result.volume
-        assert isinstance(volume, Volume)
-        assert volume.name == "new-volume"
-        assert volume.id == "vol-new-123"
-        assert volume.size == 10
-        assert volume.status == "creating"
-        assert volume.volume_type == "ssd"
-        assert volume.availability_zone == "nova"
+        # Verify result is a Volume object
+        assert isinstance(result, Volume)
+        assert result.name == "new-volume"
+        assert result.id == "vol-new-123"
+        assert result.size == 10
+        assert result.status == "creating"
+        assert result.volume_type == "ssd"
+        assert result.availability_zone == "nova"
 
         mock_conn.block_storage.create_volume.assert_called_once_with(
             name="new-volume",
@@ -381,9 +373,9 @@ class TestCinderTools:
         result = cinder_tools.create_volume("minimal-volume", 5)
 
         # Verify result structure
-        assert isinstance(result, VolumeCreateResult)
-        assert result.volume.name == "minimal-volume"
-        assert result.volume.size == 5
+        assert isinstance(result, Volume)
+        assert result.name == "minimal-volume"
+        assert result.size == 5
 
         mock_conn.block_storage.create_volume.assert_called_once_with(
             name="minimal-volume",
@@ -415,14 +407,8 @@ class TestCinderTools:
         cinder_tools = CinderTools()
         result = cinder_tools.delete_volume("vol-delete", False)
 
-        # Verify result is a VolumeDeleteResult object
-        assert isinstance(result, VolumeDeleteResult)
-        assert result.volume_id == "vol-delete"
-        assert result.volume_name == "delete-me"
-        assert result.force == False
-
-
-        mock_conn.block_storage.get_volume.assert_called_once_with("vol-delete")
+        # Verify result is None
+        assert result is None
         mock_conn.block_storage.delete_volume.assert_called_once_with("vol-delete", force=False)
 
     def test_delete_volume_force(self, mock_get_openstack_conn_cinder):
@@ -438,19 +424,15 @@ class TestCinderTools:
         cinder_tools = CinderTools()
         result = cinder_tools.delete_volume("vol-force-delete", True)
 
-        # Verify result structure
-        assert isinstance(result, VolumeDeleteResult)
-        assert result.volume_id == "vol-force-delete"
-        assert result.volume_name is None
-        assert result.force == True
-
+        # Verify result is None
+        assert result is None
 
         mock_conn.block_storage.delete_volume.assert_called_once_with("vol-force-delete", force=True)
 
     def test_delete_volume_error(self, mock_get_openstack_conn_cinder):
         """Test deleting volume with error."""
         mock_conn = mock_get_openstack_conn_cinder
-        mock_conn.block_storage.get_volume.side_effect = Exception("Volume not found")
+        mock_conn.block_storage.delete_volume.side_effect = Exception("Volume not found")
 
         cinder_tools = CinderTools()
         
@@ -473,13 +455,8 @@ class TestCinderTools:
         cinder_tools = CinderTools()
         result = cinder_tools.extend_volume("vol-extend", 20)
 
-        # Verify result is a VolumeExtendResult object
-        assert isinstance(result, VolumeExtendResult)
-        assert result.volume_id == "vol-extend"
-        assert result.volume_name == "extend-me"
-        assert result.current_size == 10
-        assert result.new_size == 20
-
+        # Verify result is None
+        assert result is None
 
         mock_conn.block_storage.get_volume.assert_called_once_with("vol-extend")
         mock_conn.block_storage.extend_volume.assert_called_once_with("vol-extend", 20)

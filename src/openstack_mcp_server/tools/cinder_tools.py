@@ -1,9 +1,6 @@
 from ..resources.cinder import (
     Volume,
     VolumeAttachment,
-    VolumeCreateResult,
-    VolumeDeleteResult,
-    VolumeExtendResult,
 )
 from .base import get_openstack_conn
 from fastmcp import FastMCP
@@ -107,7 +104,7 @@ class CinderTools:
         description: str | None = None,
         volume_type: str | None = None,
         availability_zone: str | None = None,
-    ) -> VolumeCreateResult:
+    ) -> Volume:
         """
         Create a new volume.
 
@@ -116,7 +113,7 @@ class CinderTools:
         :param description: Optional description for the volume
         :param volume_type: Optional volume type
         :param availability_zone: Optional availability zone
-        :return: A VolumeCreateResult object with the created volume
+        :return: The created Volume object
         """
         conn = get_openstack_conn()
 
@@ -148,41 +145,27 @@ class CinderTools:
             attachments=[],
         )
 
-        return VolumeCreateResult(volume=volume_obj)
+        return volume_obj
 
-    def delete_volume(
-        self, volume_id: str, force: bool = False
-    ) -> VolumeDeleteResult:
+    def delete_volume(self, volume_id: str, force: bool = False) -> None:
         """
         Delete a volume.
 
         :param volume_id: The ID of the volume to delete
         :param force: Whether to force delete the volume
-        :return: A VolumeDeleteResult object with deletion details
+        :return: None
         """
         conn = get_openstack_conn()
 
-        # Get volume info before deletion
-        volume = conn.block_storage.get_volume(volume_id)
-        volume_name = volume.name
-
         conn.block_storage.delete_volume(volume_id, force=force)
 
-        return VolumeDeleteResult(
-            volume_id=volume_id,
-            volume_name=volume_name,
-            force=force,
-        )
-
-    def extend_volume(
-        self, volume_id: str, new_size: int
-    ) -> VolumeExtendResult:
+    def extend_volume(self, volume_id: str, new_size: int) -> None:
         """
         Extend a volume to a new size.
 
         :param volume_id: The ID of the volume to extend
         :param new_size: The new size in GB (must be larger than current size)
-        :return: A VolumeExtendResult object with extension details
+        :return: None
         """
         conn = get_openstack_conn()
 
@@ -196,10 +179,3 @@ class CinderTools:
             )
 
         conn.block_storage.extend_volume(volume_id, new_size)
-
-        return VolumeExtendResult(
-            volume_id=volume_id,
-            volume_name=volume.name,
-            current_size=current_size,
-            new_size=new_size,
-        )

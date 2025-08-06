@@ -19,20 +19,3 @@ class Volume(BaseModel):
     is_encrypted: bool | None = None
     description: str | None = None
     attachments: list[VolumeAttachment] = []
-
-
-class VolumeCreateResult(BaseModel):
-    volume: Volume
-
-
-class VolumeDeleteResult(BaseModel):
-    volume_id: str
-    volume_name: str | None = None
-    force: bool
-
-
-class VolumeExtendResult(BaseModel):
-    volume_id: str
-    volume_name: str | None = None
-    current_size: int
-    new_size: int
