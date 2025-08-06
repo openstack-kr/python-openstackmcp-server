@@ -1,10 +1,8 @@
 from ..resources.cinder import (
     Volume,
     VolumeAttachment,
-    VolumeAttachResult,
     VolumeCreateResult,
     VolumeDeleteResult,
-    VolumeDetachResult,
     VolumeExtendResult,
 )
 from .base import get_openstack_conn
@@ -25,8 +23,6 @@ class CinderTools:
         mcp.tool()(self.create_volume)
         mcp.tool()(self.delete_volume)
         mcp.tool()(self.extend_volume)
-        mcp.tool()(self.attach_volume_to_server)
-        mcp.tool()(self.detach_volume_from_server)
 
     def get_cinder_volumes(self) -> list[Volume]:
         """
@@ -208,68 +204,4 @@ class CinderTools:
             volume_name=volume.name,
             current_size=current_size,
             new_size=new_size,
-        )
-
-    def attach_volume_to_server(
-        self, server_id: str, volume_id: str, device: str = ""
-    ) -> VolumeAttachResult:
-        """
-        Attach a volume to a server instance.
-
-        :param server_id: The ID of the server to attach to
-        :param volume_id: The ID of the volume to attach
-        :param device: Optional device name (e.g., /dev/vdb)
-        :return: A VolumeAttachResult object with attachment details
-        """
-        conn = get_openstack_conn()
-
-        # Get server and volume info
-        server = conn.compute.get_server(server_id)
-        volume = conn.block_storage.get_volume(volume_id)
-
-        # Prepare attachment parameters
-        attach_kwargs = {
-            "server": server_id,
-            "volume": volume_id,
-        }
-
-        if device:
-            attach_kwargs["device"] = device
-
-        # Attach the volume
-        attachment = conn.compute.create_volume_attachment(**attach_kwargs)
-
-        return VolumeAttachResult(
-            server_id=server_id,
-            server_name=server.name,
-            volume_id=volume_id,
-            volume_name=volume.name,
-            device=device if device else None,
-            attachment_id=attachment.id,
-        )
-
-    def detach_volume_from_server(
-        self, server_id: str, volume_id: str
-    ) -> VolumeDetachResult:
-        """
-        Detach a volume from a server instance.
-
-        :param server_id: The ID of the server to detach from
-        :param volume_id: The ID of the volume to detach
-        :return: A VolumeDetachResult object with detachment details
-        """
-        conn = get_openstack_conn()
-
-        # Get server and volume info
-        server = conn.compute.get_server(server_id)
-        volume = conn.block_storage.get_volume(volume_id)
-
-        # Detach the volume
-        conn.compute.delete_volume_attachment(volume_id, server_id)
-
-        return VolumeDetachResult(
-            server_id=server_id,
-            server_name=server.name,
-            volume_id=volume_id,
-            volume_name=volume.name,
         )

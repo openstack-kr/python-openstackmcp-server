@@ -36,19 +36,3 @@ class VolumeExtendResult(BaseModel):
     volume_name: str | None = None
     current_size: int
     new_size: int
-
-
-class VolumeAttachResult(BaseModel):
-    server_id: str
-    server_name: str | None = None
-    volume_id: str
-    volume_name: str | None = None
-    device: str | None = None
-    attachment_id: str | None = None
-
-
-class VolumeDetachResult(BaseModel):
-    server_id: str
-    server_name: str | None = None
-    volume_id: str
-    volume_name: str | None = None

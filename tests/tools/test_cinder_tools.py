@@ -7,8 +7,6 @@ from openstack_mcp_server.resources.cinder import (
     VolumeCreateResult,
     VolumeDeleteResult,
     VolumeExtendResult,
-    VolumeAttachResult,
-    VolumeDetachResult
 )
 
 
@@ -514,125 +512,7 @@ class TestCinderTools:
         with pytest.raises(Exception, match="Volume busy"):
             cinder_tools.extend_volume("vol-busy", 30)
 
-    def test_attach_volume_success(self, mock_get_openstack_conn_cinder):
-        """Test attaching volume successfully."""
-        mock_conn = mock_get_openstack_conn_cinder
 
-        # Mock server and volume
-        mock_server = Mock()
-        mock_server.name = "test-server"
-        mock_server.id = "server-123"
-
-        mock_volume = Mock()
-        mock_volume.name = "attach-vol"
-        mock_volume.id = "vol-attach"
-
-        mock_attachment = Mock()
-        mock_attachment.id = "attachment-123"
-
-        mock_conn.compute.get_server.return_value = mock_server
-        mock_conn.block_storage.get_volume.return_value = mock_volume
-        mock_conn.compute.create_volume_attachment.return_value = mock_attachment
-
-        cinder_tools = CinderTools()
-        result = cinder_tools.attach_volume_to_server("server-123", "vol-attach", "/dev/vdb")
-
-        # Verify result is a VolumeAttachResult object
-        assert isinstance(result, VolumeAttachResult)
-        assert result.server_id == "server-123"
-        assert result.server_name == "test-server"
-        assert result.volume_id == "vol-attach"
-        assert result.volume_name == "attach-vol"
-        assert result.device == "/dev/vdb"
-        assert result.attachment_id == "attachment-123"
-
-
-        mock_conn.compute.create_volume_attachment.assert_called_once_with(
-            server="server-123",
-            volume="vol-attach",
-            device="/dev/vdb"
-        )
-
-    def test_attach_volume_auto_device(self, mock_get_openstack_conn_cinder):
-        """Test attaching volume with auto-assigned device."""
-        mock_conn = mock_get_openstack_conn_cinder
-
-        mock_server = Mock()
-        mock_server.name = "auto-server"
-        mock_volume = Mock()
-        mock_volume.name = None  # Test unnamed volume
-        mock_attachment = Mock()
-        mock_attachment.id = "auto-attachment"
-
-        mock_conn.compute.get_server.return_value = mock_server
-        mock_conn.block_storage.get_volume.return_value = mock_volume
-        mock_conn.compute.create_volume_attachment.return_value = mock_attachment
-
-        cinder_tools = CinderTools()
-        result = cinder_tools.attach_volume_to_server("server-123", "vol-attach")
-
-        # Verify result structure
-        assert isinstance(result, VolumeAttachResult)
-        assert result.server_name == "auto-server"
-        assert result.volume_name is None  # Unnamed volume
-        assert result.device is None  # Auto-assigned device
-        assert result.attachment_id == "auto-attachment"
-
-        mock_conn.compute.create_volume_attachment.assert_called_once_with(
-            server="server-123",
-            volume="vol-attach"
-        )
-
-    def test_attach_volume_error(self, mock_get_openstack_conn_cinder):
-        """Test attaching volume with error."""
-        mock_conn = mock_get_openstack_conn_cinder
-        mock_conn.compute.get_server.side_effect = Exception("Server not found")
-
-        cinder_tools = CinderTools()
-        
-        # Should raise the exception since we removed try-catch
-        with pytest.raises(Exception, match="Server not found"):
-            cinder_tools.attach_volume_to_server("nonexistent-server", "vol-attach")
-
-    def test_detach_volume_success(self, mock_get_openstack_conn_cinder):
-        """Test detaching volume successfully."""
-        mock_conn = mock_get_openstack_conn_cinder
-
-        # Mock server and volume
-        mock_server = Mock()
-        mock_server.name = "detach-server"
-        mock_server.id = "server-456"
-
-        mock_volume = Mock()
-        mock_volume.name = "detach-vol"
-        mock_volume.id = "vol-detach"
-
-        mock_conn.compute.get_server.return_value = mock_server
-        mock_conn.block_storage.get_volume.return_value = mock_volume
-
-        cinder_tools = CinderTools()
-        result = cinder_tools.detach_volume_from_server("server-456", "vol-detach")
-
-        # Verify result is a VolumeDetachResult object
-        assert isinstance(result, VolumeDetachResult)
-        assert result.server_id == "server-456"
-        assert result.server_name == "detach-server"
-        assert result.volume_id == "vol-detach"
-        assert result.volume_name == "detach-vol"
-
-
-        mock_conn.compute.delete_volume_attachment.assert_called_once_with("vol-detach", "server-456")
-
-    def test_detach_volume_error(self, mock_get_openstack_conn_cinder):
-        """Test detaching volume with error."""
-        mock_conn = mock_get_openstack_conn_cinder
-        mock_conn.compute.get_server.side_effect = Exception("Server not found")
-
-        cinder_tools = CinderTools()
-        
-        # Should raise the exception since we removed try-catch
-        with pytest.raises(Exception, match="Server not found"):
-            cinder_tools.detach_volume_from_server("nonexistent-server", "vol-detach")
 
     def test_register_tools(self):
         """Test that tools are properly registered with FastMCP."""
@@ -645,7 +525,7 @@ class TestCinderTools:
         cinder_tools.register_tools(mock_mcp)
 
         # Verify mcp.tool() was called for each method
-        assert mock_mcp.tool.call_count == 7
+        assert mock_mcp.tool.call_count == 5
 
         # Verify all methods were registered
         registered_methods = [call[0][0] for call in mock_tool_decorator.call_args_list]
@@ -655,8 +535,6 @@ class TestCinderTools:
             cinder_tools.create_volume,
             cinder_tools.delete_volume,
             cinder_tools.extend_volume,
-            cinder_tools.attach_volume_to_server,
-            cinder_tools.detach_volume_from_server,
         ]
 
         for method in expected_methods:
@@ -672,9 +550,6 @@ class TestCinderTools:
         assert hasattr(cinder_tools, 'create_volume')
         assert hasattr(cinder_tools, 'delete_volume')
         assert hasattr(cinder_tools, 'extend_volume')
-        assert hasattr(cinder_tools, 'attach_volume_to_server')
-        assert hasattr(cinder_tools, 'detach_volume_from_server')
-
         # Verify all methods are callable
         assert callable(cinder_tools.register_tools)
         assert callable(cinder_tools.get_cinder_volumes)
@@ -682,8 +557,6 @@ class TestCinderTools:
         assert callable(cinder_tools.create_volume)
         assert callable(cinder_tools.delete_volume)
         assert callable(cinder_tools.extend_volume)
-        assert callable(cinder_tools.attach_volume_to_server)
-        assert callable(cinder_tools.detach_volume_from_server)
 
     def test_get_cinder_volumes_docstring(self):
         """Test that get_cinder_volumes has proper docstring."""
@@ -705,8 +578,6 @@ class TestCinderTools:
             'create_volume',
             'delete_volume',
             'extend_volume',
-            'attach_volume_to_server',
-            'detach_volume_from_server'
         ]
         
         for method_name in methods_to_check:
