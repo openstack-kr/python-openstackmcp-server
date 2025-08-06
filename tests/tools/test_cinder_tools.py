@@ -695,8 +695,8 @@ class TestCinderTools:
         assert "return" in docstring.lower() or "Return" in docstring
         assert "list[Volume]" in docstring or "A list of Volume objects" in docstring
 
-    def test_all_methods_have_docstrings(self):
-        """Test that all public methods have proper docstrings."""
+    def test_all_cinder_methods_have_docstrings(self):
+        """Test that all public CinderTools methods have proper docstrings."""
         cinder_tools = CinderTools()
         
         methods_to_check = [
