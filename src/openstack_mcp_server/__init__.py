@@ -37,7 +37,7 @@ def main():
         # Validate transport protocol
         if MCP_TRANSPORT not in ["stdio", "sse", "streamable-http"]:
             logger.error(
-                f"Invalid transport protocol: {MCP_TRANSPORT}. Using stdio instead."
+                f"Invalid transport protocol: {MCP_TRANSPORT}. Using stdio instead.",
             )
             transport = "stdio"
         else:
@@ -45,7 +45,7 @@ def main():
 
         # Start the server
         logger.info(
-            f"Starting Openstack MCP Server with {transport} transport"
+            f"Starting Openstack MCP Server with {transport} transport",
         )
 
         args = parser.parse_args()

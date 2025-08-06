@@ -31,7 +31,7 @@ class NovaTools:
         server_list = []
         for server in conn.compute.servers():
             server_list.append(
-                Server(name=server.name, id=server.id, status=server.status)
+                Server(name=server.name, id=server.id, status=server.status),
             )
 
         return server_list

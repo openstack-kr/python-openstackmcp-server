@@ -35,7 +35,7 @@ class KeystoneTools:
         region_list = []
         for region in conn.identity.regions():
             region_list.append(
-                Region(id=region.id, description=region.description)
+                Region(id=region.id, description=region.description),
             )
 
         return region_list

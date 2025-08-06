@@ -28,7 +28,7 @@ class GlanceTools:
         image_list = []
         for image in conn.image.images():
             image_list.append(
-                f"{image.name} ({image.id}) - Status: {image.status}"
+                f"{image.name} ({image.id}) - Status: {image.status}",
             )
 
         return "\n".join(image_list)
