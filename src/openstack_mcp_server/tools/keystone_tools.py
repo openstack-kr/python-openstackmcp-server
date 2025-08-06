@@ -1,12 +1,14 @@
+from .base import get_openstack_conn
 from fastmcp import FastMCP
 from pydantic import BaseModel
-from .base import get_openstack_conn
+
 
 # NOTE: In openstacksdk, all of the fields are optional.
 # In this case, we are only using description field as optional.
 class Region(BaseModel):
     id: str
     description: str | None = ""
+
 
 class KeystoneTools:
     """
@@ -26,24 +28,40 @@ class KeystoneTools:
     def get_regions(self) -> list[Region]:
         """
         Get the list of Keystone regions.
-        
+
         :return: A list of Region objects representing the regions.
         """
         conn = get_openstack_conn()
 
         region_list = []
         for region in conn.identity.regions():
-            region_list.append(Region(id=region.id, description=region.description))
-            
+            region_list.append(
+                Region(id=region.id, description=region.description)
+            )
+
         return region_list
-    
+
+    def get_region(self, id: str) -> Region:
+        """
+        Get a region.
+
+        :param id: The ID of the region. (required)
+
+        :return: The Region object.
+        """
+        conn = get_openstack_conn()
+
+        region = conn.identity.get_region(region=id)
+
+        return Region(id=region.id, description=region.description)
+
     def create_region(self, id: str, description: str = "") -> Region:
         """
         Create a new region.
-        
+
         :param id: The ID of the region. (required)
         :param description: The description of the region. It can be None. (optional)
-        
+
         :return: The created Region object.
         """
         conn = get_openstack_conn()
@@ -51,33 +69,37 @@ class KeystoneTools:
         region = conn.identity.create_region(id=id, description=description)
 
         return Region(id=region.id, description=region.description)
-    
+
     def delete_region(self, id: str) -> None:
         """
         Delete a region.
-        
+
         :param id: The ID of the region. (required)
-        
+
         :return: A message indicating the region was deleted successfully.
         """
         conn = get_openstack_conn()
-        
+
         # ignore_missing is set to False to raise an exception if the region does not exist.
         conn.identity.delete_region(region=id, ignore_missing=False)
-        
+
         return None
 
     def update_region(self, id: str, description: str = "") -> Region:
         """
         Update a region.
-        
+
         :param id: The ID of the region. (required)
         :param description: The string description of the region. It could be None. (optional)
-        
+
         :return: The updated Region object.
         """
         conn = get_openstack_conn()
- 
-        updated_region = conn.identity.update_region(region=id, description=description)
 
-        return Region(id=updated_region.id, description=updated_region.description)
+        updated_region = conn.identity.update_region(
+            region=id, description=description
+        )
+
+        return Region(
+            id=updated_region.id, description=updated_region.description
+        )
