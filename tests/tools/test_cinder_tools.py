@@ -309,7 +309,7 @@ class TestCinderTools:
 
         cinder_tools = CinderTools()
         
-        # Should raise the exception since we removed try-catch
+        # Should raise exception directly
         with pytest.raises(Exception, match="Volume not found"):
             cinder_tools.get_volume_details("nonexistent-vol")
 
@@ -397,7 +397,7 @@ class TestCinderTools:
 
         cinder_tools = CinderTools()
         
-        # Should raise the exception since we removed try-catch
+        # Should raise exception directly
         with pytest.raises(Exception, match="Quota exceeded"):
             cinder_tools.create_volume("fail-volume", 100)
 
@@ -454,7 +454,7 @@ class TestCinderTools:
 
         cinder_tools = CinderTools()
         
-        # Should raise the exception since we removed try-catch
+        # Should raise exception directly
         with pytest.raises(Exception, match="Volume not found"):
             cinder_tools.delete_volume("nonexistent-vol")
 
@@ -508,7 +508,6 @@ class TestCinderTools:
 
         cinder_tools = CinderTools()
         
-        # Should raise the exception since we removed try-catch
         with pytest.raises(Exception, match="Volume busy"):
             cinder_tools.extend_volume("vol-busy", 30)
 

@@ -166,7 +166,6 @@ class CinderTools:
         volume = conn.block_storage.get_volume(volume_id)
         volume_name = volume.name
 
-        # Delete the volume
         conn.block_storage.delete_volume(volume_id, force=force)
 
         return VolumeDeleteResult(
@@ -196,7 +195,6 @@ class CinderTools:
                 f"New size ({new_size} GB) must be larger than current size ({current_size} GB)"
             )
 
-        # Extend the volume
         conn.block_storage.extend_volume(volume_id, new_size)
 
         return VolumeExtendResult(
