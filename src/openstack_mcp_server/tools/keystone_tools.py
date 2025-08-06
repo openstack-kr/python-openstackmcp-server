@@ -66,3 +66,18 @@ class KeystoneTools:
         conn.identity.delete_region(region=id, ignore_missing=False)
         
         return f"Region {id} deleted successfully."
+
+    def update_region(self, id: str, description: str = "") -> Region:
+        """
+        Update a region.
+        
+        :param id: The ID of the region. (required)
+        :param description: The string description of the region. It could be None. (optional)
+        
+        :return: The updated Region object.
+        """
+        conn = get_openstack_conn()
+ 
+        updated_region = conn.identity.update_region(region=id, description=description)
+
+        return Region(id=updated_region.id, description=updated_region.description)
