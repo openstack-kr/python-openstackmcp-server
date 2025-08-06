@@ -5,4 +5,4 @@ from pydantic import BaseModel
 # In this case, we are only using description field as optional.
 class Region(BaseModel):
     id: str
-    description: str | None = ""
+    description: str = ""

@@ -54,7 +54,7 @@ class KeystoneTools:
         Create a new region.
 
         :param id: The ID of the region. (required)
-        :param description: The description of the region. It can be None. (optional)
+        :param description: The description of the region. (optional)
 
         :return: The created Region object.
         """
@@ -70,7 +70,7 @@ class KeystoneTools:
 
         :param id: The ID of the region. (required)
 
-        :return: A message indicating the region was deleted successfully.
+        :return: None
         """
         conn = get_openstack_conn()
 
@@ -84,7 +84,7 @@ class KeystoneTools:
         Update a region.
 
         :param id: The ID of the region. (required)
-        :param description: The string description of the region. It could be None. (optional)
+        :param description: The string description of the region. (optional)
 
         :return: The updated Region object.
         """
