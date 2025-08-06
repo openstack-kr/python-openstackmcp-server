@@ -1,13 +1,6 @@
 from .base import get_openstack_conn
+from .response.keystone import Region
 from fastmcp import FastMCP
-from pydantic import BaseModel
-
-
-# NOTE: In openstacksdk, all of the fields are optional.
-# In this case, we are only using description field as optional.
-class Region(BaseModel):
-    id: str
-    description: str | None = ""
 
 
 class KeystoneTools:
