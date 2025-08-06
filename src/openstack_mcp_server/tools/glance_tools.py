@@ -5,7 +5,7 @@ from .base import get_openstack_conn
 
 class GlanceTools:
     """
-    A class to encapsulate Nova-related tools and utilities.
+    A class to encapsulate Compute-related tools and utilities.
     """
 
     def register_tools(self, mcp: FastMCP):

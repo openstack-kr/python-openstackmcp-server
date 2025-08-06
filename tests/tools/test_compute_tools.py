@@ -1,13 +1,13 @@
 from unittest.mock import Mock, call
-from openstack_mcp_server.tools.response.nova import Server
-from openstack_mcp_server.tools.nova_tools import NovaTools
+from openstack_mcp_server.tools.response.compute import Server
+from openstack_mcp_server.tools.compute_tools import ComputeTools
 
 
-class TestNovaTools:
-    """Test cases for NovaTools class."""
+class TestComputeTools:
+    """Test cases for ComputeTools class."""
 
-    def test_get_nova_servers_success(self, mock_get_openstack_conn):
-        """Test getting nova servers successfully."""
+    def test_get_compute_servers_success(self, mock_get_openstack_conn):
+        """Test getting compute servers successfully."""
         mock_conn = mock_get_openstack_conn
 
         # Create mock server objects
@@ -24,9 +24,9 @@ class TestNovaTools:
         # Configure mock compute.servers()
         mock_conn.compute.servers.return_value = [mock_server1, mock_server2]
 
-        # Test NovaTools
-        nova_tools = NovaTools()
-        result = nova_tools.get_nova_servers()
+        # Test ComputeTools
+        compute_tools = ComputeTools()
+        result = compute_tools.get_compute_servers()
 
         # Verify results
         expected_output = [
@@ -38,23 +38,23 @@ class TestNovaTools:
         # Verify mock calls
         mock_conn.compute.servers.assert_called_once()
 
-    def test_get_nova_servers_empty_list(self, mock_get_openstack_conn):
-        """Test getting nova servers when no servers exist."""
+    def test_get_compute_servers_empty_list(self, mock_get_openstack_conn):
+        """Test getting compute servers when no servers exist."""
         mock_conn = mock_get_openstack_conn
 
         # Empty server list
         mock_conn.compute.servers.return_value = []
 
-        nova_tools = NovaTools()
-        result = nova_tools.get_nova_servers()
+        compute_tools = ComputeTools()
+        result = compute_tools.get_compute_servers()
 
         # Verify empty list
         assert result == []
 
         mock_conn.compute.servers.assert_called_once()
 
-    def test_get_nova_servers_single_server(self, mock_get_openstack_conn):
-        """Test getting nova servers with a single server."""
+    def test_get_compute_servers_single_server(self, mock_get_openstack_conn):
+        """Test getting compute servers with a single server."""
         mock_conn = mock_get_openstack_conn
 
         # Single server
@@ -65,15 +65,15 @@ class TestNovaTools:
 
         mock_conn.compute.servers.return_value = [mock_server]
 
-        nova_tools = NovaTools()
-        result = nova_tools.get_nova_servers()
+        compute_tools = ComputeTools()
+        result = compute_tools.get_compute_servers()
 
         expected_output = [Server(name="test-server", id="single-123", status="BUILDING")]
         assert result == expected_output
 
         mock_conn.compute.servers.assert_called_once()
 
-    def test_get_nova_servers_multiple_statuses(self, mock_get_openstack_conn):
+    def test_get_compute_servers_multiple_statuses(self, mock_get_openstack_conn):
         """Test servers with various statuses."""
         mock_conn = mock_get_openstack_conn
 
@@ -96,8 +96,8 @@ class TestNovaTools:
 
         mock_conn.compute.servers.return_value = mock_servers
 
-        nova_tools = NovaTools()
-        result = nova_tools.get_nova_servers()
+        compute_tools = ComputeTools()
+        result = compute_tools.get_compute_servers()
 
         # Verify each server is included in the result
         for name, server_id, status in servers_data:
@@ -108,7 +108,7 @@ class TestNovaTools:
 
         mock_conn.compute.servers.assert_called_once()
 
-    def test_get_nova_servers_with_special_characters(self, mock_get_openstack_conn):
+    def test_get_compute_servers_with_special_characters(self, mock_get_openstack_conn):
         """Test servers with special characters in names."""
         mock_conn = mock_get_openstack_conn
 
@@ -125,8 +125,8 @@ class TestNovaTools:
 
         mock_conn.compute.servers.return_value = [mock_server1, mock_server2]
 
-        nova_tools = NovaTools()
-        result = nova_tools.get_nova_servers()
+        compute_tools = ComputeTools()
+        result = compute_tools.get_compute_servers()
 
         assert Server(name="web-server_test-01", id="id-with-dashes", status="ACTIVE") in result
         assert Server(name="db.server.prod", id="id.with.dots", status="SHUTOFF") in result
@@ -141,29 +141,29 @@ class TestNovaTools:
         mock_tool_decorator = Mock()
         mock_mcp.tool.return_value = mock_tool_decorator
 
-        nova_tools = NovaTools()
-        nova_tools.register_tools(mock_mcp)
+        compute_tools = ComputeTools()
+        compute_tools.register_tools(mock_mcp)
         
         mock_tool_decorator.assert_has_calls([
-            call(nova_tools.get_nova_servers),
-            call(nova_tools.get_nova_server)
+            call(compute_tools.get_compute_servers),
+            call(compute_tools.get_compute_server)
         ])
         assert mock_tool_decorator.call_count == 2
 
-    def test_nova_tools_instantiation(self):
-        """Test NovaTools can be instantiated."""
-        nova_tools = NovaTools()
-        assert nova_tools is not None
-        assert hasattr(nova_tools, 'register_tools')
-        assert hasattr(nova_tools, 'get_nova_servers')
-        assert callable(nova_tools.register_tools)
-        assert callable(nova_tools.get_nova_servers)
+    def test_compute_tools_instantiation(self):
+        """Test ComputeTools can be instantiated."""
+        compute_tools = ComputeTools()
+        assert compute_tools is not None
+        assert hasattr(compute_tools, 'register_tools')
+        assert hasattr(compute_tools, 'get_compute_servers')
+        assert callable(compute_tools.register_tools)
+        assert callable(compute_tools.get_compute_servers)
 
-    def test_get_nova_servers_docstring(self):
-        """Test that get_nova_servers has proper docstring."""
-        nova_tools = NovaTools()
-        docstring = nova_tools.get_nova_servers.__doc__
+    def test_get_compute_servers_docstring(self):
+        """Test that get_compute_servers has proper docstring."""
+        compute_tools = ComputeTools()
+        docstring = compute_tools.get_compute_servers.__doc__
 
         assert docstring is not None
-        assert "Get the list of Nova servers" in docstring
+        assert "Get the list of Compute servers" in docstring
         assert "return" in docstring.lower() or "Return" in docstring

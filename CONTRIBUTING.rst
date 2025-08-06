@@ -39,12 +39,12 @@ Format::
 
 **Example**::
 
-    feat(nova): implement server management tools
+    feat(compute): implement server management tools
 
-    Add Nova server listing and detail retrieval functionality
+    Add Compute server listing and detail retrieval functionality
     for MCP clients with proper error handling and OpenStack SDK integration.
 
-    - Add get_nova_servers tool
+    - Add get_compute_servers tool
     - Add get_server_details tool  
     - Implement server status filtering
     - Add comprehensive error handling

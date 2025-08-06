@@ -4,11 +4,11 @@ from unittest.mock import Mock, patch
 
 @pytest.fixture
 def mock_get_openstack_conn():
-    """Mock get_openstack_conn function for nova_tools."""
+    """Mock get_openstack_conn function for compute_tools."""
     mock_conn = Mock()
 
     with patch(
-        "openstack_mcp_server.tools.nova_tools.get_openstack_conn",
+        "openstack_mcp_server.tools.compute_tools.get_openstack_conn",
         return_value=mock_conn
     ) as mock_func:
         yield mock_conn
