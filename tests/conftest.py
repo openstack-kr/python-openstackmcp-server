@@ -15,12 +15,12 @@ def mock_get_openstack_conn():
 
 
 @pytest.fixture
-def mock_get_openstack_conn_glance():
-    """Mock get_openstack_conn function for glance_tools."""
+def mock_get_openstack_conn_image():
+    """Mock get_openstack_conn function for image_tools."""
     mock_conn = Mock()
 
     with patch(
-        "openstack_mcp_server.tools.glance_tools.get_openstack_conn",
+        "openstack_mcp_server.tools.image_tools.get_openstack_conn",
         return_value=mock_conn
     ) as mock_func:
         yield mock_conn
