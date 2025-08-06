@@ -4,11 +4,20 @@ version = "0.1.0"
 description = "A MCP server providing OpenStack services for MCP clients"
 readme = "README.md"
 requires-python = ">=3.10"
-dependencies = ["fastmcp>=2.11.0", "openstacksdk>=4.6.0", "pydantic>=2.11.7"]
+dependencies = [
+    "fastmcp>=2.11.0",
+    "openstacksdk>=4.6.0",
+    "pydantic>=2.11.7",
+]
 
 [dependency-groups]
-dev = ["ruff>=0.12.5", "pre-commit>=4.2.0"]
-test = ["pytest>=8.4.1"]
+dev = [
+    "ruff>=0.12.5",
+    "pre-commit>=4.2.0"
+]    
+test = [
+    "pytest>=8.4.1"
+]
 
 
 [build-system]
@@ -29,7 +38,10 @@ python_functions = ["test_*"]
 
 [tool.ruff]
 line-length = 79
-exclude = ["tests", "docs"]
+exclude = [
+    "tests",
+    "docs",
+]
 
 [tool.ruff.format]
 quote-style = "double"
