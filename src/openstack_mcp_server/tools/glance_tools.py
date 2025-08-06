@@ -1,5 +1,6 @@
-from .base import get_openstack_conn
 from fastmcp import FastMCP
+
+from .base import get_openstack_conn
 
 
 class GlanceTools:

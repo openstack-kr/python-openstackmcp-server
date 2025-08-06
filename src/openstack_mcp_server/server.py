@@ -1,6 +1,7 @@
 from fastmcp.server import FastMCP
 from fastmcp.server.middleware.error_handling import ErrorHandlingMiddleware
 from fastmcp.server.middleware.logging import LoggingMiddleware
+
 from openstack_mcp_server.tools import register_tool
 
 

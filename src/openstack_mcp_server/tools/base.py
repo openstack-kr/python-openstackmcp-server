@@ -1,5 +1,7 @@
 import openstack
+
 from openstack import connection
+
 from openstack_mcp_server import config
 
 
@@ -16,7 +18,6 @@ class OpenStackConnectionManager:
             openstack.enable_logging(debug=config.MCP_DEBUG_MODE)
             cls._connection = openstack.connect(cloud=config.MCP_CLOUD_NAME)
         return cls._connection
-
 
     # TODO: Close connection
 
