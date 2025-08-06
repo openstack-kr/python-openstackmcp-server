@@ -340,7 +340,7 @@ class TestCinderTools:
 
         # Verify result is a VolumeCreateResult object
         assert isinstance(result, VolumeCreateResult)
-        assert result.message == "Volume creation initiated successfully"
+
         
         # Verify volume details
         volume = result.volume
@@ -422,7 +422,7 @@ class TestCinderTools:
         assert result.volume_id == "vol-delete"
         assert result.volume_name == "delete-me"
         assert result.force == False
-        assert result.message == "Volume deletion initiated successfully"
+
 
         mock_conn.block_storage.get_volume.assert_called_once_with("vol-delete")
         mock_conn.block_storage.delete_volume.assert_called_once_with("vol-delete", force=False)
@@ -445,7 +445,7 @@ class TestCinderTools:
         assert result.volume_id == "vol-force-delete"
         assert result.volume_name is None
         assert result.force == True
-        assert result.message == "Volume deletion initiated successfully"
+
 
         mock_conn.block_storage.delete_volume.assert_called_once_with("vol-force-delete", force=True)
 
@@ -481,7 +481,7 @@ class TestCinderTools:
         assert result.volume_name == "extend-me"
         assert result.current_size == 10
         assert result.new_size == 20
-        assert result.message == "Volume extension initiated successfully"
+
 
         mock_conn.block_storage.get_volume.assert_called_once_with("vol-extend")
         mock_conn.block_storage.extend_volume.assert_called_once_with("vol-extend", 20)
@@ -545,7 +545,7 @@ class TestCinderTools:
         assert result.volume_name == "attach-vol"
         assert result.device == "/dev/vdb"
         assert result.attachment_id == "attachment-123"
-        assert result.message == "Volume attachment initiated successfully"
+
 
         mock_conn.compute.create_volume_attachment.assert_called_once_with(
             server="server-123",
@@ -619,7 +619,7 @@ class TestCinderTools:
         assert result.server_name == "detach-server"
         assert result.volume_id == "vol-detach"
         assert result.volume_name == "detach-vol"
-        assert result.message == "Volume detachment initiated successfully"
+
 
         mock_conn.compute.delete_volume_attachment.assert_called_once_with("vol-detach", "server-456")
 

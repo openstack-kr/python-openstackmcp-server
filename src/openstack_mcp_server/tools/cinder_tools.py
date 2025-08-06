@@ -120,7 +120,7 @@ class CinderTools:
         :param description: Optional description for the volume
         :param volume_type: Optional volume type
         :param availability_zone: Optional availability zone
-        :return: A VolumeCreateResult object with the created volume and result message
+        :return: A VolumeCreateResult object with the created volume
         """
         conn = get_openstack_conn()
 
@@ -152,9 +152,7 @@ class CinderTools:
             attachments=[],
         )
 
-        return VolumeCreateResult(
-            volume=volume_obj, message="Volume creation initiated successfully"
-        )
+        return VolumeCreateResult(volume=volume_obj)
 
     def delete_volume(
         self, volume_id: str, force: bool = False
@@ -179,7 +177,6 @@ class CinderTools:
             volume_id=volume_id,
             volume_name=volume_name,
             force=force,
-            message="Volume deletion initiated successfully",
         )
 
     def extend_volume(
@@ -211,7 +208,6 @@ class CinderTools:
             volume_name=volume.name,
             current_size=current_size,
             new_size=new_size,
-            message="Volume extension initiated successfully",
         )
 
     def attach_volume_to_server(
@@ -250,7 +246,6 @@ class CinderTools:
             volume_name=volume.name,
             device=device if device else None,
             attachment_id=attachment.id,
-            message="Volume attachment initiated successfully",
         )
 
     def detach_volume_from_server(
@@ -277,5 +272,4 @@ class CinderTools:
             server_name=server.name,
             volume_id=volume_id,
             volume_name=volume.name,
-            message="Volume detachment initiated successfully",
         )

@@ -23,14 +23,12 @@ class Volume(BaseModel):
 
 class VolumeCreateResult(BaseModel):
     volume: Volume
-    message: str
 
 
 class VolumeDeleteResult(BaseModel):
     volume_id: str
     volume_name: str | None = None
     force: bool
-    message: str
 
 
 class VolumeExtendResult(BaseModel):
@@ -38,7 +36,6 @@ class VolumeExtendResult(BaseModel):
     volume_name: str | None = None
     current_size: int
     new_size: int
-    message: str
 
 
 class VolumeAttachResult(BaseModel):
@@ -48,7 +45,6 @@ class VolumeAttachResult(BaseModel):
     volume_name: str | None = None
     device: str | None = None
     attachment_id: str | None = None
-    message: str
 
 
 class VolumeDetachResult(BaseModel):
@@ -56,4 +52,3 @@ class VolumeDetachResult(BaseModel):
     server_name: str | None = None
     volume_id: str
     volume_name: str | None = None
-    message: str
