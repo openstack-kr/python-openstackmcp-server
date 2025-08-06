@@ -34,7 +34,6 @@ class CinderTools:
 
         :return: A list of Volume objects representing the volumes.
         """
-        # Initialize connection
         conn = get_openstack_conn()
 
         # List the volumes
