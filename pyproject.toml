@@ -16,7 +16,7 @@ dev = [
     "pre-commit>=4.2.0",
 ]    
 test = [
-    "pytest>=8.4.1"
+    "pytest>=8.4.1",
 ]
 
 
@@ -64,7 +64,10 @@ select = [
     "I",
     "COM812",
 ]
-ignore = ["C901", "E501"]
+ignore = [
+    "C901",
+    "E501",
+]
 
 [tool.ruff.lint.isort]
 lines-after-imports = 2
