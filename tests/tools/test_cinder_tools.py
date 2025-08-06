@@ -1,6 +1,15 @@
 import pytest
 from unittest.mock import Mock
-from openstack_mcp_server.tools.cinder_tools import CinderTools
+from openstack_mcp_server.tools.cinder_tools import (
+    CinderTools,
+    Volume,
+    VolumeAttachment,
+    VolumeCreateResult,
+    VolumeDeleteResult,
+    VolumeExtendResult,
+    VolumeAttachResult,
+    VolumeDetachResult
+)
 
 
 class TestCinderTools:
@@ -15,11 +24,27 @@ class TestCinderTools:
         mock_volume1.name = "web-data-volume"
         mock_volume1.id = "abc123-def456-ghi789"
         mock_volume1.status = "available"
+        mock_volume1.size = 10
+        mock_volume1.volume_type = "ssd"
+        mock_volume1.availability_zone = "nova"
+        mock_volume1.created_at = "2024-01-01T12:00:00Z"
+        mock_volume1.is_bootable = False
+        mock_volume1.is_encrypted = False
+        mock_volume1.description = "Web data volume"
+        mock_volume1.attachments = []
 
         mock_volume2 = Mock()
         mock_volume2.name = "db-backup-volume"
         mock_volume2.id = "xyz789-uvw456-rst123"
         mock_volume2.status = "in-use"
+        mock_volume2.size = 20
+        mock_volume2.volume_type = "hdd"
+        mock_volume2.availability_zone = "nova"
+        mock_volume2.created_at = "2024-01-02T12:00:00Z"
+        mock_volume2.is_bootable = True
+        mock_volume2.is_encrypted = True
+        mock_volume2.description = "DB backup volume"
+        mock_volume2.attachments = []
 
         # Configure mock block_storage.volumes()
         mock_conn.block_storage.volumes.return_value = [mock_volume1, mock_volume2]
@@ -29,11 +54,23 @@ class TestCinderTools:
         result = cinder_tools.get_cinder_volumes()
 
         # Verify results
-        expected_output = (
-            "web-data-volume (abc123-def456-ghi789) - Status: available\n"
-            "db-backup-volume (xyz789-uvw456-rst123) - Status: in-use"
-        )
-        assert result == expected_output
+        assert isinstance(result, list)
+        assert len(result) == 2
+        assert all(isinstance(vol, Volume) for vol in result)
+        
+        # Check first volume
+        vol1 = result[0]
+        assert vol1.id == "abc123-def456-ghi789"
+        assert vol1.name == "web-data-volume"
+        assert vol1.status == "available"
+        assert vol1.size == 10
+        
+        # Check second volume
+        vol2 = result[1]
+        assert vol2.id == "xyz789-uvw456-rst123"
+        assert vol2.name == "db-backup-volume"
+        assert vol2.status == "in-use"
+        assert vol2.size == 20
 
         # Verify mock calls
         mock_conn.block_storage.volumes.assert_called_once()
@@ -48,8 +85,9 @@ class TestCinderTools:
         cinder_tools = CinderTools()
         result = cinder_tools.get_cinder_volumes()
 
-        # Verify empty string
-        assert result == ""
+        # Verify empty list
+        assert isinstance(result, list)
+        assert len(result) == 0
 
         mock_conn.block_storage.volumes.assert_called_once()
 
@@ -62,14 +100,25 @@ class TestCinderTools:
         mock_volume.name = "test-volume"
         mock_volume.id = "single-123"
         mock_volume.status = "creating"
+        mock_volume.size = 5
+        mock_volume.volume_type = None
+        mock_volume.availability_zone = "nova"
+        mock_volume.created_at = None
+        mock_volume.is_bootable = False
+        mock_volume.is_encrypted = False
+        mock_volume.description = None
+        mock_volume.attachments = []
 
         mock_conn.block_storage.volumes.return_value = [mock_volume]
 
         cinder_tools = CinderTools()
         result = cinder_tools.get_cinder_volumes()
 
-        expected_output = "test-volume (single-123) - Status: creating"
-        assert result == expected_output
+        assert isinstance(result, list)
+        assert len(result) == 1
+        assert result[0].name == "test-volume"
+        assert result[0].id == "single-123"
+        assert result[0].status == "creating"
 
         mock_conn.block_storage.volumes.assert_called_once()
 
@@ -92,6 +141,14 @@ class TestCinderTools:
             mock_volume.name = name
             mock_volume.id = volume_id
             mock_volume.status = status
+            mock_volume.size = 10
+            mock_volume.volume_type = "standard"
+            mock_volume.availability_zone = "nova"
+            mock_volume.created_at = "2024-01-01T12:00:00Z"
+            mock_volume.is_bootable = False
+            mock_volume.is_encrypted = False
+            mock_volume.description = f"Description for {name}"
+            mock_volume.attachments = []
             mock_volumes.append(mock_volume)
 
         mock_conn.block_storage.volumes.return_value = mock_volumes
@@ -99,13 +156,17 @@ class TestCinderTools:
         cinder_tools = CinderTools()
         result = cinder_tools.get_cinder_volumes()
 
+        # Verify result is a list with correct length
+        assert isinstance(result, list)
+        assert len(result) == 5
+        
         # Verify each volume is included in the result
+        result_by_id = {vol.id: vol for vol in result}
         for name, volume_id, status in volumes_data:
-            expected_line = f"{name} ({volume_id}) - Status: {status}"
-            assert expected_line in result
-
-        # Verify line count (5 volumes)
-        assert len(result.split('\n')) == 5
+            assert volume_id in result_by_id
+            vol = result_by_id[volume_id]
+            assert vol.name == name
+            assert vol.status == status
 
         mock_conn.block_storage.volumes.assert_called_once()
 
@@ -118,19 +179,44 @@ class TestCinderTools:
         mock_volume1.name = "web-volume_test-01"
         mock_volume1.id = "id-with-dashes"
         mock_volume1.status = "available"
+        mock_volume1.size = 15
+        mock_volume1.volume_type = "ssd"
+        mock_volume1.availability_zone = "nova"
+        mock_volume1.created_at = "2024-01-01T12:00:00Z"
+        mock_volume1.is_bootable = False
+        mock_volume1.is_encrypted = False
+        mock_volume1.description = None
+        mock_volume1.attachments = []
 
         mock_volume2 = Mock()
         mock_volume2.name = "db.volume.prod"
         mock_volume2.id = "id.with.dots"
         mock_volume2.status = "in-use"
+        mock_volume2.size = 25
+        mock_volume2.volume_type = "hdd"
+        mock_volume2.availability_zone = "nova"
+        mock_volume2.created_at = "2024-01-02T12:00:00Z"
+        mock_volume2.is_bootable = True
+        mock_volume2.is_encrypted = True
+        mock_volume2.description = "Production DB volume"
+        mock_volume2.attachments = []
 
         mock_conn.block_storage.volumes.return_value = [mock_volume1, mock_volume2]
 
         cinder_tools = CinderTools()
         result = cinder_tools.get_cinder_volumes()
 
-        assert "web-volume_test-01 (id-with-dashes) - Status: available" in result
-        assert "db.volume.prod (id.with.dots) - Status: in-use" in result
+        assert isinstance(result, list)
+        assert len(result) == 2
+        
+        # Find volumes by name
+        vol1 = next(vol for vol in result if vol.name == "web-volume_test-01")
+        vol2 = next(vol for vol in result if vol.name == "db.volume.prod")
+        
+        assert vol1.id == "id-with-dashes"
+        assert vol1.status == "available"
+        assert vol2.id == "id.with.dots"
+        assert vol2.status == "in-use"
 
         mock_conn.block_storage.volumes.assert_called_once()
 
@@ -149,6 +235,7 @@ class TestCinderTools:
         mock_volume.created_at = "2024-01-01T12:00:00Z"
         mock_volume.is_bootable = False
         mock_volume.is_encrypted = True
+        mock_volume.description = "Test volume description"
         mock_volume.attachments = []
 
         mock_conn.block_storage.get_volume.return_value = mock_volume
@@ -156,15 +243,18 @@ class TestCinderTools:
         cinder_tools = CinderTools()
         result = cinder_tools.get_volume_details("vol-123")
 
-        # Verify key information is present
-        assert "Volume Details:" in result
-        assert "Name: test-volume" in result
-        assert "ID: vol-123" in result
-        assert "Status: available" in result
-        assert "Size: 20 GB" in result
-        assert "Volume Type: ssd" in result
-        assert "Bootable: False" in result
-        assert "Encrypted: True" in result
+        # Verify result is a Volume object
+        assert isinstance(result, Volume)
+        assert result.name == "test-volume"
+        assert result.id == "vol-123"
+        assert result.status == "available"
+        assert result.size == 20
+        assert result.volume_type == "ssd"
+        assert result.availability_zone == "nova"
+        assert result.is_bootable == False
+        assert result.is_encrypted == True
+        assert result.description == "Test volume description"
+        assert len(result.attachments) == 0
 
         mock_conn.block_storage.get_volume.assert_called_once_with("vol-123")
 
@@ -183,9 +273,10 @@ class TestCinderTools:
         mock_volume.created_at = "2024-01-01T12:00:00Z"
         mock_volume.is_bootable = True
         mock_volume.is_encrypted = False
+        mock_volume.description = "Attached volume"
         mock_volume.attachments = [
-            {"server_id": "server-123", "device": "/dev/vdb"},
-            {"server_id": "server-456", "device": "/dev/vdc"}
+            {"server_id": "server-123", "device": "/dev/vdb", "id": "attach-1"},
+            {"server_id": "server-456", "device": "/dev/vdc", "id": "attach-2"}
         ]
 
         mock_conn.block_storage.get_volume.return_value = mock_volume
@@ -193,12 +284,25 @@ class TestCinderTools:
         cinder_tools = CinderTools()
         result = cinder_tools.get_volume_details("vol-attached")
 
-        assert "Attachments: 2 attachment(s)" in result
-        assert "Attachment Details:" in result
-        assert "Server ID: server-123" in result
-        assert "Device: /dev/vdb" in result
-        assert "Server ID: server-456" in result
-        assert "Device: /dev/vdc" in result
+        # Verify result is a Volume object
+        assert isinstance(result, Volume)
+        assert result.name == "attached-volume"
+        assert result.status == "in-use"
+        assert len(result.attachments) == 2
+        
+        # Verify attachment details
+        attach1 = result.attachments[0]
+        attach2 = result.attachments[1]
+        
+        assert isinstance(attach1, VolumeAttachment)
+        assert attach1.server_id == "server-123"
+        assert attach1.device == "/dev/vdb"
+        assert attach1.attachment_id == "attach-1"
+        
+        assert isinstance(attach2, VolumeAttachment)
+        assert attach2.server_id == "server-456"
+        assert attach2.device == "/dev/vdc"
+        assert attach2.attachment_id == "attach-2"
 
     def test_get_volume_details_error(self, mock_get_openstack_conn_cinder):
         """Test getting volume details with error."""
@@ -206,9 +310,10 @@ class TestCinderTools:
         mock_conn.block_storage.get_volume.side_effect = Exception("Volume not found")
 
         cinder_tools = CinderTools()
-        result = cinder_tools.get_volume_details("nonexistent-vol")
-
-        assert "Error retrieving volume details: Volume not found" in result
+        
+        # Should raise the exception since we removed try-catch
+        with pytest.raises(Exception, match="Volume not found"):
+            cinder_tools.get_volume_details("nonexistent-vol")
 
     def test_create_volume_success(self, mock_get_openstack_conn_cinder):
         """Test creating volume successfully."""
@@ -220,17 +325,32 @@ class TestCinderTools:
         mock_volume.id = "vol-new-123"
         mock_volume.size = 10
         mock_volume.status = "creating"
+        mock_volume.volume_type = "ssd"
+        mock_volume.availability_zone = "nova"
+        mock_volume.created_at = "2024-01-01T12:00:00Z"
+        mock_volume.is_bootable = False
+        mock_volume.is_encrypted = False
+        mock_volume.description = "Test volume"
+        mock_volume.attachments = []
 
         mock_conn.block_storage.create_volume.return_value = mock_volume
 
         cinder_tools = CinderTools()
         result = cinder_tools.create_volume("new-volume", 10, "Test volume", "ssd", "nova")
 
-        assert "Volume creation initiated:" in result
-        assert "Name: new-volume" in result
-        assert "ID: vol-new-123" in result
-        assert "Size: 10 GB" in result
-        assert "Status: creating" in result
+        # Verify result is a VolumeCreateResult object
+        assert isinstance(result, VolumeCreateResult)
+        assert result.message == "Volume creation initiated successfully"
+        
+        # Verify volume details
+        volume = result.volume
+        assert isinstance(volume, Volume)
+        assert volume.name == "new-volume"
+        assert volume.id == "vol-new-123"
+        assert volume.size == 10
+        assert volume.status == "creating"
+        assert volume.volume_type == "ssd"
+        assert volume.availability_zone == "nova"
 
         mock_conn.block_storage.create_volume.assert_called_once_with(
             name="new-volume",
@@ -249,11 +369,23 @@ class TestCinderTools:
         mock_volume.id = "vol-minimal"
         mock_volume.size = 5
         mock_volume.status = "creating"
+        mock_volume.volume_type = None
+        mock_volume.availability_zone = None
+        mock_volume.created_at = "2024-01-01T12:00:00Z"
+        mock_volume.is_bootable = False
+        mock_volume.is_encrypted = False
+        mock_volume.description = None
+        mock_volume.attachments = []
 
         mock_conn.block_storage.create_volume.return_value = mock_volume
 
         cinder_tools = CinderTools()
         result = cinder_tools.create_volume("minimal-volume", 5)
+
+        # Verify result structure
+        assert isinstance(result, VolumeCreateResult)
+        assert result.volume.name == "minimal-volume"
+        assert result.volume.size == 5
 
         mock_conn.block_storage.create_volume.assert_called_once_with(
             name="minimal-volume",
@@ -266,9 +398,10 @@ class TestCinderTools:
         mock_conn.block_storage.create_volume.side_effect = Exception("Quota exceeded")
 
         cinder_tools = CinderTools()
-        result = cinder_tools.create_volume("fail-volume", 100)
-
-        assert "Error creating volume: Quota exceeded" in result
+        
+        # Should raise the exception since we removed try-catch
+        with pytest.raises(Exception, match="Quota exceeded"):
+            cinder_tools.create_volume("fail-volume", 100)
 
     def test_delete_volume_success(self, mock_get_openstack_conn_cinder):
         """Test deleting volume successfully."""
@@ -284,10 +417,12 @@ class TestCinderTools:
         cinder_tools = CinderTools()
         result = cinder_tools.delete_volume("vol-delete", False)
 
-        assert "Volume deletion initiated:" in result
-        assert "Name: delete-me" in result
-        assert "ID: vol-delete" in result
-        assert "Force: False" in result
+        # Verify result is a VolumeDeleteResult object
+        assert isinstance(result, VolumeDeleteResult)
+        assert result.volume_id == "vol-delete"
+        assert result.volume_name == "delete-me"
+        assert result.force == False
+        assert result.message == "Volume deletion initiated successfully"
 
         mock_conn.block_storage.get_volume.assert_called_once_with("vol-delete")
         mock_conn.block_storage.delete_volume.assert_called_once_with("vol-delete", force=False)
@@ -305,8 +440,12 @@ class TestCinderTools:
         cinder_tools = CinderTools()
         result = cinder_tools.delete_volume("vol-force-delete", True)
 
-        assert "Name: Unnamed" in result
-        assert "Force: True" in result
+        # Verify result structure
+        assert isinstance(result, VolumeDeleteResult)
+        assert result.volume_id == "vol-force-delete"
+        assert result.volume_name is None
+        assert result.force == True
+        assert result.message == "Volume deletion initiated successfully"
 
         mock_conn.block_storage.delete_volume.assert_called_once_with("vol-force-delete", force=True)
 
@@ -316,9 +455,10 @@ class TestCinderTools:
         mock_conn.block_storage.get_volume.side_effect = Exception("Volume not found")
 
         cinder_tools = CinderTools()
-        result = cinder_tools.delete_volume("nonexistent-vol")
-
-        assert "Error deleting volume: Volume not found" in result
+        
+        # Should raise the exception since we removed try-catch
+        with pytest.raises(Exception, match="Volume not found"):
+            cinder_tools.delete_volume("nonexistent-vol")
 
     def test_extend_volume_success(self, mock_get_openstack_conn_cinder):
         """Test extending volume successfully."""
@@ -335,10 +475,13 @@ class TestCinderTools:
         cinder_tools = CinderTools()
         result = cinder_tools.extend_volume("vol-extend", 20)
 
-        assert "Volume extension initiated:" in result
-        assert "Name: extend-me" in result
-        assert "Current Size: 10 GB" in result
-        assert "New Size: 20 GB" in result
+        # Verify result is a VolumeExtendResult object
+        assert isinstance(result, VolumeExtendResult)
+        assert result.volume_id == "vol-extend"
+        assert result.volume_name == "extend-me"
+        assert result.current_size == 10
+        assert result.new_size == 20
+        assert result.message == "Volume extension initiated successfully"
 
         mock_conn.block_storage.get_volume.assert_called_once_with("vol-extend")
         mock_conn.block_storage.extend_volume.assert_called_once_with("vol-extend", 20)
@@ -353,9 +496,11 @@ class TestCinderTools:
         mock_conn.block_storage.get_volume.return_value = mock_volume
 
         cinder_tools = CinderTools()
-        result = cinder_tools.extend_volume("vol-extend", 15)
-
-        assert "Error: New size (15 GB) must be larger than current size (20 GB)" in result
+        
+        # Should raise ValueError since we changed error handling
+        with pytest.raises(ValueError, match=r"New size \(15 GB\) must be larger than current size \(20 GB\)"):
+            cinder_tools.extend_volume("vol-extend", 15)
+            
         mock_conn.block_storage.extend_volume.assert_not_called()
 
     def test_extend_volume_error(self, mock_get_openstack_conn_cinder):
@@ -364,9 +509,10 @@ class TestCinderTools:
         mock_conn.block_storage.get_volume.side_effect = Exception("Volume busy")
 
         cinder_tools = CinderTools()
-        result = cinder_tools.extend_volume("vol-busy", 30)
-
-        assert "Error extending volume: Volume busy" in result
+        
+        # Should raise the exception since we removed try-catch
+        with pytest.raises(Exception, match="Volume busy"):
+            cinder_tools.extend_volume("vol-busy", 30)
 
     def test_attach_volume_success(self, mock_get_openstack_conn_cinder):
         """Test attaching volume successfully."""
@@ -391,11 +537,15 @@ class TestCinderTools:
         cinder_tools = CinderTools()
         result = cinder_tools.attach_volume_to_server("server-123", "vol-attach", "/dev/vdb")
 
-        assert "Volume attachment initiated:" in result
-        assert "Server: test-server (server-123)" in result
-        assert "Volume: attach-vol (vol-attach)" in result
-        assert "Device: /dev/vdb" in result
-        assert "Attachment ID: attachment-123" in result
+        # Verify result is a VolumeAttachResult object
+        assert isinstance(result, VolumeAttachResult)
+        assert result.server_id == "server-123"
+        assert result.server_name == "test-server"
+        assert result.volume_id == "vol-attach"
+        assert result.volume_name == "attach-vol"
+        assert result.device == "/dev/vdb"
+        assert result.attachment_id == "attachment-123"
+        assert result.message == "Volume attachment initiated successfully"
 
         mock_conn.compute.create_volume_attachment.assert_called_once_with(
             server="server-123",
@@ -421,8 +571,12 @@ class TestCinderTools:
         cinder_tools = CinderTools()
         result = cinder_tools.attach_volume_to_server("server-123", "vol-attach")
 
-        assert "Volume: Unnamed (vol-attach)" in result
-        assert "Device: Auto-assigned" in result
+        # Verify result structure
+        assert isinstance(result, VolumeAttachResult)
+        assert result.server_name == "auto-server"
+        assert result.volume_name is None  # Unnamed volume
+        assert result.device is None  # Auto-assigned device
+        assert result.attachment_id == "auto-attachment"
 
         mock_conn.compute.create_volume_attachment.assert_called_once_with(
             server="server-123",
@@ -435,9 +589,10 @@ class TestCinderTools:
         mock_conn.compute.get_server.side_effect = Exception("Server not found")
 
         cinder_tools = CinderTools()
-        result = cinder_tools.attach_volume_to_server("nonexistent-server", "vol-attach")
-
-        assert "Error attaching volume: Server not found" in result
+        
+        # Should raise the exception since we removed try-catch
+        with pytest.raises(Exception, match="Server not found"):
+            cinder_tools.attach_volume_to_server("nonexistent-server", "vol-attach")
 
     def test_detach_volume_success(self, mock_get_openstack_conn_cinder):
         """Test detaching volume successfully."""
@@ -458,9 +613,13 @@ class TestCinderTools:
         cinder_tools = CinderTools()
         result = cinder_tools.detach_volume_from_server("server-456", "vol-detach")
 
-        assert "Volume detachment initiated:" in result
-        assert "Server: detach-server (server-456)" in result
-        assert "Volume: detach-vol (vol-detach)" in result
+        # Verify result is a VolumeDetachResult object
+        assert isinstance(result, VolumeDetachResult)
+        assert result.server_id == "server-456"
+        assert result.server_name == "detach-server"
+        assert result.volume_id == "vol-detach"
+        assert result.volume_name == "detach-vol"
+        assert result.message == "Volume detachment initiated successfully"
 
         mock_conn.compute.delete_volume_attachment.assert_called_once_with("vol-detach", "server-456")
 
@@ -470,9 +629,10 @@ class TestCinderTools:
         mock_conn.compute.get_server.side_effect = Exception("Server not found")
 
         cinder_tools = CinderTools()
-        result = cinder_tools.detach_volume_from_server("nonexistent-server", "vol-detach")
-
-        assert "Error detaching volume: Server not found" in result
+        
+        # Should raise the exception since we removed try-catch
+        with pytest.raises(Exception, match="Server not found"):
+            cinder_tools.detach_volume_from_server("nonexistent-server", "vol-detach")
 
     def test_register_tools(self):
         """Test that tools are properly registered with FastMCP."""
@@ -533,6 +693,7 @@ class TestCinderTools:
         assert docstring is not None
         assert "Get the list of Cinder volumes" in docstring
         assert "return" in docstring.lower() or "Return" in docstring
+        assert "list[Volume]" in docstring or "A list of Volume objects" in docstring
 
     def test_all_methods_have_docstrings(self):
         """Test that all public methods have proper docstrings."""
