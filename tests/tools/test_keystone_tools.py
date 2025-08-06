@@ -113,4 +113,36 @@ class TestKeystoneTools:
 
         # Verify mock calls
         mock_conn.identity.create_region.assert_called_once_with(id=1, description="Region One description") 
+        
+    def test_delete_region_success(self, mock_get_openstack_conn_keystone):
+        """Test deleting a keystone region successfully."""
+        mock_conn = mock_get_openstack_conn_keystone
+
+        # Test delete_region()
+        keystone_tools = self.get_keystone_tools()
+        result = keystone_tools.delete_region(id="RegionOne")
+        
+        # Verify results
+        assert result == "Region RegionOne deleted successfully."
+        
+        # Verify mock calls
+        mock_conn.identity.delete_region.assert_called_once_with(region="RegionOne", ignore_missing=False)
     
+    def test_delete_region_not_found(self, mock_get_openstack_conn_keystone):
+        """Test deleting a keystone region that does not exist."""
+        mock_conn = mock_get_openstack_conn_keystone
+
+        # Configure mock to raise NotFoundException
+        mock_conn.identity.delete_region.side_effect = exceptions.NotFoundException(
+            "Region 'RegionOne' not found"
+        )
+
+        # Test delete_region()
+        keystone_tools = self.get_keystone_tools()
+        
+        # Verify exception is raised
+        with pytest.raises(exceptions.NotFoundException, match="Region 'RegionOne' not found"):
+            keystone_tools.delete_region(id="RegionOne")
+        
+        # Verify mock calls
+        mock_conn.identity.delete_region.assert_called_once_with(region="RegionOne", ignore_missing=False)

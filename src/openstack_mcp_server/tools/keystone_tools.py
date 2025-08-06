@@ -6,7 +6,7 @@ from .base import get_openstack_conn
 # In this case, we are only using description field as optional.
 class Region(BaseModel):
     id: str
-    description: str | None = None
+    description: str | None = ""
 
 class KeystoneTools:
     """
@@ -20,6 +20,8 @@ class KeystoneTools:
 
         mcp.tool()(self.get_regions)
         mcp.tool()(self.create_region)
+        mcp.tool()(self.delete_region)
+        mcp.tool()(self.update_region)
 
     def get_regions(self) -> list[Region]:
         """
@@ -35,12 +37,12 @@ class KeystoneTools:
             
         return region_list
     
-    def create_region(self, id: str, description: str | None = None) -> Region:
+    def create_region(self, id: str, description: str = "") -> Region:
         """
         Create a new region.
         
-        :param id: The ID of the region.
-        :param description: The description of the region. It can be None.
+        :param id: The ID of the region. (required)
+        :param description: The description of the region. It can be None. (optional)
         
         :return: The created Region object.
         """
@@ -50,3 +52,17 @@ class KeystoneTools:
 
         return Region(id=region.id, description=region.description)
     
+    def delete_region(self, id: str) -> str:
+        """
+        Delete a region.
+        
+        :param id: The ID of the region. (required)
+        
+        :return: A message indicating the region was deleted successfully.
+        """
+        conn = get_openstack_conn()
+        
+        # ignore_missing is set to False to raise an exception if the region does not exist.
+        conn.identity.delete_region(region=id, ignore_missing=False)
+        
+        return f"Region {id} deleted successfully."
