@@ -1,7 +1,7 @@
 import pytest
 from unittest.mock import Mock
-from openstack_mcp_server.tools.cinder_tools import (
-    CinderTools,
+from openstack_mcp_server.tools.cinder_tools import CinderTools
+from openstack_mcp_server.resources.cinder import (
     Volume,
     VolumeAttachment,
     VolumeCreateResult,
