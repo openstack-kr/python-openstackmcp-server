@@ -29,6 +29,7 @@ packages = ["src/openstack_mcp_server"]
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
+pythonpath = ["src"]
 
 python_files = ["test_*.py", "*_test.py"]
 python_classes = ["Test*"]
