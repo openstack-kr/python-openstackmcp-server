@@ -1,7 +1,8 @@
 import pytest
-from unittest.mock import Mock
 from openstack import exceptions
 from openstack_mcp_server.tools.keystone_tools import KeystoneTools, Region
+from unittest.mock import Mock
+
 
 class TestKeystoneTools:
     """Test cases for KeystoneTools class."""
@@ -9,11 +10,11 @@ class TestKeystoneTools:
     def get_keystone_tools(self) -> KeystoneTools:
         """Get an instance of KeystoneTools."""
         return KeystoneTools()
-    
+
     def test_get_regions_success(self, mock_get_openstack_conn_keystone):
         """Test getting keystone regions successfully."""
         mock_conn = mock_get_openstack_conn_keystone
-        
+
         # Create mock region objects
         mock_region1 = Mock()
         mock_region1.id = "RegionOne"
@@ -22,17 +23,19 @@ class TestKeystoneTools:
         mock_region2 = Mock()
         mock_region2.id = "RegionTwo"
         mock_region2.description = "Region Two description"
-        
+
         # Configure mock region.regions()
         mock_conn.identity.regions.return_value = [mock_region1, mock_region2]
 
         # Test get_regions()
         keystone_tools = self.get_keystone_tools()
         result = keystone_tools.get_regions()
-        
+
         # Verify results
-        assert result == [Region(id="RegionOne", description="Region One description"),
-                          Region(id="RegionTwo", description="Region Two description")]
+        assert result == [
+            Region(id="RegionOne", description="Region One description"),
+            Region(id="RegionTwo", description="Region Two description"),
+        ]
 
         # Verify mock calls
         mock_conn.identity.regions.assert_called_once()
@@ -40,14 +43,14 @@ class TestKeystoneTools:
     def test_get_regions_empty_list(self, mock_get_openstack_conn_keystone):
         """Test getting keystone regions when there are no regions."""
         mock_conn = mock_get_openstack_conn_keystone
-        
+
         # Empty region list
         mock_conn.identity.regions.return_value = []
-        
+
         # Test get_regions()
         keystone_tools = self.get_keystone_tools()
         result = keystone_tools.get_regions()
-        
+
         # Verify results
         assert result == []
 
@@ -57,7 +60,7 @@ class TestKeystoneTools:
     def test_create_region_success(self, mock_get_openstack_conn_keystone):
         """Test creating a keystone region successfully."""
         mock_conn = mock_get_openstack_conn_keystone
-        
+
         # Create mock region object
         mock_region = Mock()
         mock_region.id = "RegionOne"
@@ -68,15 +71,23 @@ class TestKeystoneTools:
 
         # Test create_region()
         keystone_tools = self.get_keystone_tools()
-        result = keystone_tools.create_region(id="RegionOne", description="Region One description")
-        
+        result = keystone_tools.create_region(
+            id="RegionOne", description="Region One description"
+        )
+
         # Verify results
-        assert result == Region(id="RegionOne", description="Region One description")
+        assert result == Region(
+            id="RegionOne", description="Region One description"
+        )
 
         # Verify mock calls
-        mock_conn.identity.create_region.assert_called_once_with(id="RegionOne", description="Region One description")
-    
-    def test_create_region_without_description(self, mock_get_openstack_conn_keystone):
+        mock_conn.identity.create_region.assert_called_once_with(
+            id="RegionOne", description="Region One description"
+        )
+
+    def test_create_region_without_description(
+        self, mock_get_openstack_conn_keystone
+    ):
         """Test creating a keystone region without a description."""
         mock_conn = mock_get_openstack_conn_keystone
 
@@ -95,21 +106,30 @@ class TestKeystoneTools:
         # Verify results
         assert result == Region(id="RegionOne")
 
-    def test_create_region_invalid_id_format(self, mock_get_openstack_conn_keystone):
+    def test_create_region_invalid_id_format(
+        self, mock_get_openstack_conn_keystone
+    ):
         """Test creating a keystone region with an invalid ID format."""
         mock_conn = mock_get_openstack_conn_keystone
 
         # Configure mock region.create_region() to raise an exception
-        mock_conn.identity.create_region.side_effect = exceptions.BadRequestException(
-            "Invalid input for field 'id': Expected string, got integer"
+        mock_conn.identity.create_region.side_effect = (
+            exceptions.BadRequestException(
+                "Invalid input for field 'id': Expected string, got integer"
+            )
         )
 
         # Test create_region()
         keystone_tools = self.get_keystone_tools()
 
         # Verify results
-        with pytest.raises(exceptions.BadRequestException, match="Invalid input for field 'id': Expected string, got integer"):
-            keystone_tools.create_region(id=1, description="Region One description")
+        with pytest.raises(
+            exceptions.BadRequestException,
+            match="Invalid input for field 'id': Expected string, got integer",
+        ):
+            keystone_tools.create_region(
+                id=1, description="Region One description"
+            )
 
         # Verify mock calls
         mock_conn.identity.create_region.assert_called_once_with(id=1, description="Region One description") 

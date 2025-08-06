@@ -1,6 +1,5 @@
-import pytest
-from unittest.mock import Mock
 from openstack_mcp_server.tools.glance_tools import GlanceTools
+from unittest.mock import Mock
 
 
 class TestGlanceTools:
@@ -38,7 +37,9 @@ class TestGlanceTools:
         # Verify mock calls
         mock_conn.image.images.assert_called_once()
 
-    def test_get_glance_images_empty_list(self, mock_get_openstack_conn_glance):
+    def test_get_glance_images_empty_list(
+        self, mock_get_openstack_conn_glance
+    ):
         """Test getting glance images when no images exist."""
         mock_conn = mock_get_openstack_conn_glance
 
@@ -53,7 +54,9 @@ class TestGlanceTools:
 
         mock_conn.image.images.assert_called_once()
 
-    def test_get_glance_images_with_empty_name(self, mock_get_openstack_conn_glance):
+    def test_get_glance_images_with_empty_name(
+        self, mock_get_openstack_conn_glance
+    ):
         """Test images with empty or None names."""
         mock_conn = mock_get_openstack_conn_glance
 

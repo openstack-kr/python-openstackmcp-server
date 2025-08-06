@@ -1,6 +1,6 @@
-from unittest.mock import Mock, call
-from openstack_mcp_server.tools.response.nova import Server
 from openstack_mcp_server.tools.nova_tools import NovaTools
+from openstack_mcp_server.tools.response.nova import Server
+from unittest.mock import Mock, call
 
 
 class TestNovaTools:
@@ -30,8 +30,16 @@ class TestNovaTools:
 
         # Verify results
         expected_output = [
-            Server(name="web-server-01", id="abc123-def456-ghi789", status="ACTIVE"),
-            Server(name="db-server-01", id="xyz789-uvw456-rst123", status="SHUTOFF"),
+            Server(
+                name="web-server-01",
+                id="abc123-def456-ghi789",
+                status="ACTIVE",
+            ),
+            Server(
+                name="db-server-01",
+                id="xyz789-uvw456-rst123",
+                status="SHUTOFF",
+            ),
         ]
         assert result == expected_output
 
@@ -68,7 +76,9 @@ class TestNovaTools:
         nova_tools = NovaTools()
         result = nova_tools.get_nova_servers()
 
-        expected_output = [Server(name="test-server", id="single-123", status="BUILDING")]
+        expected_output = [
+            Server(name="test-server", id="single-123", status="BUILDING")
+        ]
         assert result == expected_output
 
         mock_conn.compute.servers.assert_called_once()
@@ -102,13 +112,17 @@ class TestNovaTools:
         # Verify each server is included in the result
         for name, server_id, status in servers_data:
             assert any(
-                server.name == name and server.id == server_id and server.status == status
+                server.name == name
+                and server.id == server_id
+                and server.status == status
                 for server in result
             )
 
         mock_conn.compute.servers.assert_called_once()
 
-    def test_get_nova_servers_with_special_characters(self, mock_get_openstack_conn):
+    def test_get_nova_servers_with_special_characters(
+        self, mock_get_openstack_conn
+    ):
         """Test servers with special characters in names."""
         mock_conn = mock_get_openstack_conn
 
@@ -128,9 +142,16 @@ class TestNovaTools:
         nova_tools = NovaTools()
         result = nova_tools.get_nova_servers()
 
-        assert Server(name="web-server_test-01", id="id-with-dashes", status="ACTIVE") in result
-        assert Server(name="db.server.prod", id="id.with.dots", status="SHUTOFF") in result
-
+        assert (
+            Server(
+                name="web-server_test-01", id="id-with-dashes", status="ACTIVE"
+            )
+            in result
+        )
+        assert (
+            Server(name="db.server.prod", id="id.with.dots", status="SHUTOFF")
+            in result
+        )
 
         mock_conn.compute.servers.assert_called_once()
 
@@ -143,19 +164,21 @@ class TestNovaTools:
 
         nova_tools = NovaTools()
         nova_tools.register_tools(mock_mcp)
-        
-        mock_tool_decorator.assert_has_calls([
-            call(nova_tools.get_nova_servers),
-            call(nova_tools.get_nova_server)
-        ])
+
+        mock_tool_decorator.assert_has_calls(
+            [
+                call(nova_tools.get_nova_servers),
+                call(nova_tools.get_nova_server),
+            ]
+        )
         assert mock_tool_decorator.call_count == 2
 
     def test_nova_tools_instantiation(self):
         """Test NovaTools can be instantiated."""
         nova_tools = NovaTools()
         assert nova_tools is not None
-        assert hasattr(nova_tools, 'register_tools')
-        assert hasattr(nova_tools, 'get_nova_servers')
+        assert hasattr(nova_tools, "register_tools")
+        assert hasattr(nova_tools, "get_nova_servers")
         assert callable(nova_tools.register_tools)
         assert callable(nova_tools.get_nova_servers)
 
