@@ -26,12 +26,12 @@ def mock_get_openstack_conn_image():
         yield mock_conn
 
 @pytest.fixture
-def mock_get_openstack_conn_keystone():
-    """Mock get_openstack_conn function for keystone_tools."""
+def mock_get_openstack_conn_identity():
+    """Mock get_openstack_conn function for identity_tools."""
     mock_conn = Mock()
     
     with patch(
-        "openstack_mcp_server.tools.keystone_tools.get_openstack_conn",
+        "openstack_mcp_server.tools.identity_tools.get_openstack_conn",
         return_value=mock_conn
     ) as mock_func:
         yield mock_conn

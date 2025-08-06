@@ -11,14 +11,14 @@ class Region(BaseModel):
     description: str | None = None
 
 
-class KeystoneTools:
+class IdentityTools:
     """
-    A class to encapsulate Keystone-related tools and utilities.
+    A class to encapsulate Identity-related tools and utilities.
     """
 
     def register_tools(self, mcp: FastMCP):
         """
-        Register Keystone-related tools with the FastMCP instance.
+        Register Identity-related tools with the FastMCP instance.
         """
 
         mcp.tool()(self.get_regions)
@@ -26,7 +26,7 @@ class KeystoneTools:
 
     def get_regions(self) -> list[Region]:
         """
-        Get the list of Keystone regions.
+        Get the list of Identity regions.
 
         :return: A list of Region objects representing the regions.
         """
