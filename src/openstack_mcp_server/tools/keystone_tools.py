@@ -21,6 +21,7 @@ class KeystoneTools:
         """
 
         mcp.tool()(self.get_regions)
+        mcp.tool()(self.get_region)
         mcp.tool()(self.create_region)
         mcp.tool()(self.delete_region)
         mcp.tool()(self.update_region)
