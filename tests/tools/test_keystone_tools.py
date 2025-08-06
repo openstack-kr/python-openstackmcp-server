@@ -123,7 +123,7 @@ class TestKeystoneTools:
         result = keystone_tools.delete_region(id="RegionOne")
         
         # Verify results
-        assert result == "Region RegionOne deleted successfully."
+        assert result == None
         
         # Verify mock calls
         mock_conn.identity.delete_region.assert_called_once_with(region="RegionOne", ignore_missing=False)

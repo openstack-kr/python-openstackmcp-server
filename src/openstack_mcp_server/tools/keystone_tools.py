@@ -52,7 +52,7 @@ class KeystoneTools:
 
         return Region(id=region.id, description=region.description)
     
-    def delete_region(self, id: str) -> str:
+    def delete_region(self, id: str) -> None:
         """
         Delete a region.
         
@@ -65,7 +65,7 @@ class KeystoneTools:
         # ignore_missing is set to False to raise an exception if the region does not exist.
         conn.identity.delete_region(region=id, ignore_missing=False)
         
-        return f"Region {id} deleted successfully."
+        return None
 
     def update_region(self, id: str, description: str = "") -> Region:
         """
