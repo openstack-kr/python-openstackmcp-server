@@ -113,7 +113,7 @@ class TestKeystoneTools:
 
         # Verify mock calls
         mock_conn.identity.create_region.assert_called_once_with(id=1, description="Region One description") 
-        
+    
     def test_delete_region_success(self, mock_get_openstack_conn_keystone):
         """Test deleting a keystone region successfully."""
         mock_conn = mock_get_openstack_conn_keystone
