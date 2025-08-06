@@ -10,7 +10,7 @@ def mock_get_openstack_conn():
     with patch(
         "openstack_mcp_server.tools.nova_tools.get_openstack_conn",
         return_value=mock_conn
-    ) as mock_func:
+    ):
         yield mock_conn
 
 
@@ -22,7 +22,7 @@ def mock_get_openstack_conn_glance():
     with patch(
         "openstack_mcp_server.tools.glance_tools.get_openstack_conn",
         return_value=mock_conn
-    ) as mock_func:
+    ):
         yield mock_conn
 
 @pytest.fixture
@@ -33,7 +33,7 @@ def mock_get_openstack_conn_keystone():
     with patch(
         "openstack_mcp_server.tools.keystone_tools.get_openstack_conn",
         return_value=mock_conn
-    ) as mock_func:
+    ):
         yield mock_conn
 
 @pytest.fixture
@@ -44,5 +44,5 @@ def mock_openstack_base():
     with patch(
         "openstack_mcp_server.tools.base.get_openstack_conn",
         return_value=mock_conn
-    ) as mock_func:
+    ):
         yield mock_conn
