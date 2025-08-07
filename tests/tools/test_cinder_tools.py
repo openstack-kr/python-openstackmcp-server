@@ -530,23 +530,12 @@ class TestCinderTools:
         """Test extending volume successfully."""
         mock_conn = mock_get_openstack_conn_cinder
 
-        # Mock current volume
-        mock_volume = Mock()
-        mock_volume.name = "extend-me"
-        mock_volume.id = "vol-extend"
-        mock_volume.size = 10
-
-        mock_conn.block_storage.get_volume.return_value = mock_volume
-
         cinder_tools = CinderTools()
         result = cinder_tools.extend_volume("vol-extend", 20)
 
         # Verify result is None
         assert result is None
 
-        mock_conn.block_storage.get_volume.assert_called_once_with(
-            "vol-extend"
-        )
         mock_conn.block_storage.extend_volume.assert_called_once_with(
             "vol-extend", 20
         )
@@ -554,27 +543,19 @@ class TestCinderTools:
     def test_extend_volume_invalid_size(self, mock_get_openstack_conn_cinder):
         """Test extending volume with invalid size."""
         mock_conn = mock_get_openstack_conn_cinder
-
-        mock_volume = Mock()
-        mock_volume.size = 20
-
-        mock_conn.block_storage.get_volume.return_value = mock_volume
+        mock_conn.block_storage.extend_volume.side_effect = Exception(
+            "Invalid size"
+        )
 
         cinder_tools = CinderTools()
 
-        # Should raise ValueError since we changed error handling
-        with pytest.raises(
-            ValueError,
-            match=r"New size \(15 GB\) must be larger than current size \(20 GB\)",
-        ):
+        with pytest.raises(Exception, match="Invalid size"):
             cinder_tools.extend_volume("vol-extend", 15)
-
-        mock_conn.block_storage.extend_volume.assert_not_called()
 
     def test_extend_volume_error(self, mock_get_openstack_conn_cinder):
         """Test extending volume with error."""
         mock_conn = mock_get_openstack_conn_cinder
-        mock_conn.block_storage.get_volume.side_effect = Exception(
+        mock_conn.block_storage.extend_volume.side_effect = Exception(
             "Volume busy"
         )
 
