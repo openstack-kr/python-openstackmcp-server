@@ -104,6 +104,8 @@ class CinderTools:
         description: str | None = None,
         volume_type: str | None = None,
         availability_zone: str | None = None,
+        bootable: bool | None = None,
+        image: str | None = None,
     ) -> Volume:
         """
         Create a new volume.
@@ -113,13 +115,14 @@ class CinderTools:
         :param description: Optional description for the volume
         :param volume_type: Optional volume type
         :param availability_zone: Optional availability zone
+        :param bootable: Optional flag to make the volume bootable
+        :param image: Optional Image name, ID or object from which to create
         :return: The created Volume object
         """
         conn = get_openstack_conn()
 
         volume_kwargs = {
             "name": name,
-            "size": size,
         }
 
         if description is not None:
@@ -129,7 +132,9 @@ class CinderTools:
         if availability_zone is not None:
             volume_kwargs["availability_zone"] = availability_zone
 
-        volume = conn.block_storage.create_volume(**volume_kwargs)
+        volume = conn.block_storage.create_volume(
+            size=size, image=image, bootable=bootable, **volume_kwargs
+        )
 
         volume_obj = Volume(
             id=volume.id,
