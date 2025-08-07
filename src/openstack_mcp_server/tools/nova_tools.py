@@ -37,7 +37,7 @@ class NovaTools:
     def get_nova_server(self, id: str) -> Server:
         """
         Get a specific Nova server by invoking the registered tool.
-        
+
         :param id: The ID of the server to retrieve.
         :return: A Server object representing the Nova server.
         """

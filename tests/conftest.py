@@ -9,8 +9,8 @@ def mock_get_openstack_conn():
 
     with patch(
         "openstack_mcp_server.tools.nova_tools.get_openstack_conn",
-        return_value=mock_conn
-    ) as mock_func:
+        return_value=mock_conn,
+    ):
         yield mock_conn
 
 
@@ -21,20 +21,22 @@ def mock_get_openstack_conn_glance():
 
     with patch(
         "openstack_mcp_server.tools.glance_tools.get_openstack_conn",
-        return_value=mock_conn
-    ) as mock_func:
+        return_value=mock_conn,
+    ):
         yield mock_conn
+
 
 @pytest.fixture
 def mock_get_openstack_conn_keystone():
     """Mock get_openstack_conn function for keystone_tools."""
     mock_conn = Mock()
-    
+
     with patch(
         "openstack_mcp_server.tools.keystone_tools.get_openstack_conn",
-        return_value=mock_conn
-    ) as mock_func:
+        return_value=mock_conn,
+    ):
         yield mock_conn
+
 
 @pytest.fixture
 def mock_get_openstack_conn_cinder():
@@ -55,6 +57,18 @@ def mock_openstack_base():
 
     with patch(
         "openstack_mcp_server.tools.base.get_openstack_conn",
-        return_value=mock_conn
-    ) as mock_func:
+        return_value=mock_conn,
+    ):
+        yield mock_conn
+
+
+@pytest.fixture
+def mock_openstack_connect_neutron():
+    """Mock get_openstack_conn function for neutron_tools."""
+    mock_conn = Mock()
+
+    with patch(
+        "openstack_mcp_server.tools.neutron_tools.get_openstack_conn",
+        return_value=mock_conn,
+    ):
         yield mock_conn
