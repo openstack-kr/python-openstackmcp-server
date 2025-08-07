@@ -169,13 +169,4 @@ class CinderTools:
         """
         conn = get_openstack_conn()
 
-        # Get current volume info
-        volume = conn.block_storage.get_volume(volume_id)
-        current_size = volume.size
-
-        if new_size <= current_size:
-            raise ValueError(
-                f"New size ({new_size} GB) must be larger than current size ({current_size} GB)"
-            )
-
         conn.block_storage.extend_volume(volume_id, new_size)
