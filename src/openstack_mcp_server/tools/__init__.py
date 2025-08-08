@@ -5,6 +5,7 @@ def register_tool(mcp: FastMCP):
     """
     Register Openstack MCP tools.
     """
+    
     from .compute_tools import ComputeTools
     from .identity_tools import IdentityTools
     from .image_tools import ImageTools

@@ -2,7 +2,6 @@ from unittest.mock import Mock, call
 from openstack_mcp_server.tools.response.compute import Server
 from openstack_mcp_server.tools.compute_tools import ComputeTools
 
-
 class TestComputeTools:
     """Test cases for ComputeTools class."""
 
@@ -30,8 +29,16 @@ class TestComputeTools:
 
         # Verify results
         expected_output = [
-            Server(name="web-server-01", id="abc123-def456-ghi789", status="ACTIVE"),
-            Server(name="db-server-01", id="xyz789-uvw456-rst123", status="SHUTOFF"),
+            Server(
+                name="web-server-01",
+                id="abc123-def456-ghi789",
+                status="ACTIVE",
+            ),
+            Server(
+                name="db-server-01",
+                id="xyz789-uvw456-rst123",
+                status="SHUTOFF",
+            ),
         ]
         assert result == expected_output
 
@@ -68,7 +75,9 @@ class TestComputeTools:
         compute_tools = ComputeTools()
         result = compute_tools.get_compute_servers()
 
-        expected_output = [Server(name="test-server", id="single-123", status="BUILDING")]
+        expected_output = [
+            Server(name="test-server", id="single-123", status="BUILDING")
+        ]
         assert result == expected_output
 
         mock_conn.compute.servers.assert_called_once()
@@ -102,13 +111,16 @@ class TestComputeTools:
         # Verify each server is included in the result
         for name, server_id, status in servers_data:
             assert any(
-                server.name == name and server.id == server_id and server.status == status
+                server.name == name
+                and server.id == server_id
+                and server.status == status
                 for server in result
             )
 
         mock_conn.compute.servers.assert_called_once()
 
     def test_get_compute_servers_with_special_characters(self, mock_get_openstack_conn):
+
         """Test servers with special characters in names."""
         mock_conn = mock_get_openstack_conn
 
@@ -128,9 +140,16 @@ class TestComputeTools:
         compute_tools = ComputeTools()
         result = compute_tools.get_compute_servers()
 
-        assert Server(name="web-server_test-01", id="id-with-dashes", status="ACTIVE") in result
-        assert Server(name="db.server.prod", id="id.with.dots", status="SHUTOFF") in result
-
+        assert (
+            Server(
+                name="web-server_test-01", id="id-with-dashes", status="ACTIVE"
+            )
+            in result
+        )
+        assert (
+            Server(name="db.server.prod", id="id.with.dots", status="SHUTOFF")
+            in result
+        )
 
         mock_conn.compute.servers.assert_called_once()
 

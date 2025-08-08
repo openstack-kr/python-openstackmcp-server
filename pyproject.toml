@@ -54,7 +54,6 @@ python_functions = [
 [tool.ruff]
 line-length = 79
 exclude = [
-    "tests",
     "docs",
 ]
 
@@ -82,6 +81,11 @@ ignore = [
 [tool.ruff.lint.isort]
 lines-after-imports = 2
 lines-between-types = 1
+
+[tool.ruff.lint.per-file-ignores]
+"tests/*" = [
+    "S101",
+]
 
 [tool.ruff.lint.pydocstyle]
 convention = "google"
