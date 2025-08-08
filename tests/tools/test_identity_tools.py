@@ -39,17 +39,10 @@ class TestIdentityTools:
         # Verify mock calls
         mock_conn.identity.regions.assert_called_once()
 
-<<<<<<< HEAD:tests/tools/test_identity_tools.py
     def test_get_regions_empty_list(self, mock_get_openstack_conn_identity):
         """Test getting identity regions when there are no regions."""
         mock_conn = mock_get_openstack_conn_identity
-        
-=======
-    def test_get_regions_empty_list(self, mock_get_openstack_conn_keystone):
-        """Test getting keystone regions when there are no regions."""
-        mock_conn = mock_get_openstack_conn_keystone
 
->>>>>>> develop:tests/tools/test_keystone_tools.py
         # Empty region list
         mock_conn.identity.regions.return_value = []
 
