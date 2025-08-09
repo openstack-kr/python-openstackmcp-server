@@ -1,21 +1,24 @@
-import pytest
-from openstack_mcp_server.tools.neutron_tools import NeutronTools
-from openstack_mcp_server.tools.response.neutron import Network
 from unittest.mock import Mock
 
+import pytest
 
-class TestNeutronTools:
-    """Test cases for NeutronTools class."""
+from openstack_mcp_server.tools.network_tools import NetworkTools
+from openstack_mcp_server.tools.response.network import Network
 
-    def get_neutron_tools(self) -> NeutronTools:
-        """Get an instance of NeutronTools."""
-        return NeutronTools()
 
-    def test_get_neutron_networks_success(
-        self, mock_openstack_connect_neutron
+class TestNetworkTools:
+    """Test cases for NetworkTools class."""
+
+    def get_network_tools(self) -> NetworkTools:
+        """Get an instance of NetworkTools."""
+        return NetworkTools()
+
+    def test_get_networks_success(
+        self,
+        mock_openstack_connect_network,
     ):
-        """Test getting neutron networks successfully."""
-        mock_conn = mock_openstack_connect_neutron
+        """Test getting openstack networks successfully."""
+        mock_conn = mock_openstack_connect_network
 
         mock_network1 = Mock()
         mock_network1.id = "net-123-abc-def"
@@ -45,8 +48,8 @@ class TestNeutronTools:
 
         mock_conn.list_networks.return_value = [mock_network1, mock_network2]
 
-        neutron_tools = self.get_neutron_tools()
-        result = neutron_tools.get_neutron_networks()
+        network_tools = self.get_network_tools()
+        result = network_tools.get_networks()
 
         expected_network1 = Network(
             id="net-123-abc-def",
@@ -82,26 +85,28 @@ class TestNeutronTools:
 
         mock_conn.list_networks.assert_called_once_with(filters={})
 
-    def test_get_neutron_networks_empty_list(
-        self, mock_openstack_connect_neutron
+    def test_get_networks_empty_list(
+        self,
+        mock_openstack_connect_network,
     ):
-        """Test getting neutron networks when no networks exist."""
-        mock_conn = mock_openstack_connect_neutron
+        """Test getting openstack networks when no networks exist."""
+        mock_conn = mock_openstack_connect_network
 
         mock_conn.list_networks.return_value = []
 
-        neutron_tools = self.get_neutron_tools()
-        result = neutron_tools.get_neutron_networks()
+        network_tools = self.get_network_tools()
+        result = network_tools.get_networks()
 
         assert result == []
 
         mock_conn.list_networks.assert_called_once_with(filters={})
 
-    def test_get_neutron_networks_with_status_filter(
-        self, mock_openstack_connect_neutron
+    def test_get_networks_with_status_filter(
+        self,
+        mock_openstack_connect_network,
     ):
-        """Test getting neutron networks with status filter."""
-        mock_conn = mock_openstack_connect_neutron
+        """Test getting opestack networks with status filter."""
+        mock_conn = mock_openstack_connect_network
 
         mock_network1 = Mock()
         mock_network1.id = "net-active"
@@ -130,24 +135,25 @@ class TestNeutronTools:
         mock_network2.project_id = None
 
         mock_conn.list_networks.return_value = [
-            mock_network1
+            mock_network1,
         ]  # Only ACTIVE network
-        neutron_tools = self.get_neutron_tools()
-        result = neutron_tools.get_neutron_networks(status_filter="ACTIVE")
+        network_tools = self.get_network_tools()
+        result = network_tools.get_networks(status_filter="ACTIVE")
 
         assert len(result) == 1
         assert result[0].id == "net-active"
         assert result[0].status == "ACTIVE"
 
         mock_conn.list_networks.assert_called_once_with(
-            filters={"status": "ACTIVE"}
+            filters={"status": "ACTIVE"},
         )
 
-    def test_get_neutron_networks_shared_only(
-        self, mock_openstack_connect_neutron
+    def test_get_networks_shared_only(
+        self,
+        mock_openstack_connect_network,
     ):
         """Test getting only shared networks."""
-        mock_conn = mock_openstack_connect_neutron
+        mock_conn = mock_openstack_connect_network
 
         mock_network1 = Mock()
         mock_network1.id = "net-private"
@@ -176,23 +182,23 @@ class TestNeutronTools:
         mock_network2.project_id = None
 
         mock_conn.list_networks.return_value = [
-            mock_network2
+            mock_network2,
         ]  # Only shared network
 
-        neutron_tools = self.get_neutron_tools()
-        result = neutron_tools.get_neutron_networks(shared_only=True)
+        network_tools = self.get_network_tools()
+        result = network_tools.get_networks(shared_only=True)
 
         assert len(result) == 1
         assert result[0].id == "net-shared"
         assert result[0].is_shared is True
 
         mock_conn.list_networks.assert_called_once_with(
-            filters={"shared": True}
+            filters={"shared": True},
         )
 
-    def test_create_network_success(self, mock_openstack_connect_neutron):
+    def test_create_network_success(self, mock_openstack_connect_network):
         """Test creating a network successfully."""
-        mock_conn = mock_openstack_connect_neutron
+        mock_conn = mock_openstack_connect_network
 
         mock_network = Mock()
         mock_network.id = "net-new-123"
@@ -209,8 +215,8 @@ class TestNeutronTools:
 
         mock_conn.network.create_network.return_value = mock_network
 
-        neutron_tools = self.get_neutron_tools()
-        result = neutron_tools.create_network(
+        network_tools = self.get_network_tools()
+        result = network_tools.create_network(
             name="new-network",
             description="A new network",
             provider_network_type="vxlan",
@@ -242,12 +248,12 @@ class TestNeutronTools:
             "provider_segmentation_id": 200,
         }
         mock_conn.network.create_network.assert_called_once_with(
-            **expected_args
+            **expected_args,
         )
 
-    def test_create_network_minimal_args(self, mock_openstack_connect_neutron):
+    def test_create_network_minimal_args(self, mock_openstack_connect_network):
         """Test creating a network with minimal arguments."""
-        mock_conn = mock_openstack_connect_neutron
+        mock_conn = mock_openstack_connect_network
 
         mock_network = Mock()
         mock_network.id = "net-minimal-123"
@@ -264,8 +270,8 @@ class TestNeutronTools:
 
         mock_conn.network.create_network.return_value = mock_network
 
-        neutron_tools = self.get_neutron_tools()
-        result = neutron_tools.create_network(name="minimal-network")
+        network_tools = self.get_network_tools()
+        result = network_tools.create_network(name="minimal-network")
 
         expected_network = Network(
             id="net-minimal-123",
@@ -289,12 +295,12 @@ class TestNeutronTools:
             "shared": False,
         }
         mock_conn.network.create_network.assert_called_once_with(
-            **expected_args
+            **expected_args,
         )
 
-    def test_get_network_detail_success(self, mock_openstack_connect_neutron):
+    def test_get_network_detail_success(self, mock_openstack_connect_network):
         """Test getting network detail successfully."""
-        mock_conn = mock_openstack_connect_neutron
+        mock_conn = mock_openstack_connect_network
 
         mock_network = Mock()
         mock_network.id = "net-detail-123"
@@ -311,8 +317,8 @@ class TestNeutronTools:
 
         mock_conn.network.get_network.return_value = mock_network
 
-        neutron_tools = self.get_neutron_tools()
-        result = neutron_tools.get_network_detail("net-detail-123")
+        network_tools = self.get_network_tools()
+        result = network_tools.get_network_detail("net-detail-123")
 
         expected_network = Network(
             id="net-detail-123",
@@ -333,23 +339,25 @@ class TestNeutronTools:
         mock_conn.network.get_network.assert_called_once_with("net-detail-123")
 
     def test_get_network_detail_not_found(
-        self, mock_openstack_connect_neutron
+        self,
+        mock_openstack_connect_network,
     ):
         """Test getting network detail when network not found."""
-        mock_conn = mock_openstack_connect_neutron
+        mock_conn = mock_openstack_connect_network
 
         mock_conn.network.get_network.return_value = None
 
-        neutron_tools = self.get_neutron_tools()
+        network_tools = self.get_network_tools()
 
         with pytest.raises(
-            Exception, match="Network with ID nonexistent-net not found"
+            Exception,
+            match="Network with ID nonexistent-net not found",
         ):
-            neutron_tools.get_network_detail("nonexistent-net")
+            network_tools.get_network_detail("nonexistent-net")
 
-    def test_update_network_success(self, mock_openstack_connect_neutron):
+    def test_update_network_success(self, mock_openstack_connect_network):
         """Test updating a network successfully."""
-        mock_conn = mock_openstack_connect_neutron
+        mock_conn = mock_openstack_connect_network
 
         mock_network = Mock()
         mock_network.id = "net-update-123"
@@ -366,8 +374,8 @@ class TestNeutronTools:
 
         mock_conn.network.update_network.return_value = mock_network
 
-        neutron_tools = self.get_neutron_tools()
-        result = neutron_tools.update_network(
+        network_tools = self.get_network_tools()
+        result = network_tools.update_network(
             network_id="net-update-123",
             name="updated-network",
             description="Updated description",
@@ -398,14 +406,16 @@ class TestNeutronTools:
             "shared": True,
         }
         mock_conn.network.update_network.assert_called_once_with(
-            "net-update-123", **expected_args
+            "net-update-123",
+            **expected_args,
         )
 
     def test_update_network_partial_update(
-        self, mock_openstack_connect_neutron
+        self,
+        mock_openstack_connect_network,
     ):
         """Test updating a network with only some parameters."""
-        mock_conn = mock_openstack_connect_neutron
+        mock_conn = mock_openstack_connect_network
 
         mock_network = Mock()
         mock_network.id = "net-partial-123"
@@ -421,9 +431,10 @@ class TestNeutronTools:
         mock_network.project_id = None
 
         mock_conn.network.update_network.return_value = mock_network
-        neutron_tools = self.get_neutron_tools()
-        result = neutron_tools.update_network(
-            network_id="net-partial-123", name="new-name"
+        network_tools = self.get_network_tools()
+        result = network_tools.update_network(
+            network_id="net-partial-123",
+            name="new-name",
         )
 
         expected_network = Network(
@@ -444,25 +455,27 @@ class TestNeutronTools:
 
         expected_args = {"name": "new-name"}
         mock_conn.network.update_network.assert_called_once_with(
-            "net-partial-123", **expected_args
+            "net-partial-123",
+            **expected_args,
         )
 
     def test_update_network_no_parameters(
-        self, mock_openstack_connect_neutron
+        self,
+        mock_openstack_connect_network,
     ):
         """Test updating a network with no parameters provided."""
-        mock_conn = mock_openstack_connect_neutron
+        mock_conn = mock_openstack_connect_network
 
-        neutron_tools = self.get_neutron_tools()
+        network_tools = self.get_network_tools()
 
         with pytest.raises(Exception, match="No update parameters provided"):
-            neutron_tools.update_network("net-123")
+            network_tools.update_network("net-123")
 
         mock_conn.network.update_network.assert_not_called()
 
-    def test_delete_network_success(self, mock_openstack_connect_neutron):
+    def test_delete_network_success(self, mock_openstack_connect_network):
         """Test deleting a network successfully."""
-        mock_conn = mock_openstack_connect_neutron
+        mock_conn = mock_openstack_connect_network
 
         mock_network = Mock()
         mock_network.name = "network-to-delete"
@@ -470,27 +483,29 @@ class TestNeutronTools:
         mock_conn.network.get_network.return_value = mock_network
         mock_conn.network.delete_network.return_value = None
 
-        neutron_tools = self.get_neutron_tools()
-        result = neutron_tools.delete_network("net-delete-123")
+        network_tools = self.get_network_tools()
+        result = network_tools.delete_network("net-delete-123")
 
         assert result is None
 
         mock_conn.network.get_network.assert_called_once_with("net-delete-123")
         mock_conn.network.delete_network.assert_called_once_with(
-            "net-delete-123", ignore_missing=False
+            "net-delete-123",
+            ignore_missing=False,
         )
 
-    def test_delete_network_not_found(self, mock_openstack_connect_neutron):
+    def test_delete_network_not_found(self, mock_openstack_connect_network):
         """Test deleting a network when network not found."""
-        mock_conn = mock_openstack_connect_neutron
+        mock_conn = mock_openstack_connect_network
 
         mock_conn.network.get_network.return_value = None
 
-        neutron_tools = self.get_neutron_tools()
+        network_tools = self.get_network_tools()
 
         with pytest.raises(
-            Exception, match="Network with ID nonexistent-net not found"
+            Exception,
+            match="Network with ID nonexistent-net not found",
         ):
-            neutron_tools.delete_network("nonexistent-net")
+            network_tools.delete_network("nonexistent-net")
 
         mock_conn.network.delete_network.assert_not_called()

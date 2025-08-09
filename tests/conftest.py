@@ -1,5 +1,6 @@
-import pytest
 from unittest.mock import Mock, patch
+
+import pytest
 
 
 @pytest.fixture
@@ -9,9 +10,8 @@ def mock_get_openstack_conn():
 
     with patch(
         "openstack_mcp_server.tools.compute_tools.get_openstack_conn",
-        return_value=mock_conn
-    ) as mock_func:
-
+        return_value=mock_conn,
+    ):
         yield mock_conn
 
 
@@ -22,9 +22,8 @@ def mock_get_openstack_conn_image():
 
     with patch(
         "openstack_mcp_server.tools.image_tools.get_openstack_conn",
-        return_value=mock_conn
-    ) as mock_func:
-
+        return_value=mock_conn,
+    ):
         yield mock_conn
 
 
@@ -35,9 +34,8 @@ def mock_get_openstack_conn_identity():
 
     with patch(
         "openstack_mcp_server.tools.identity_tools.get_openstack_conn",
-        return_value=mock_conn
-    ) as mock_func:
-
+        return_value=mock_conn,
+    ):
         yield mock_conn
 
 
@@ -54,12 +52,12 @@ def mock_openstack_base():
 
 
 @pytest.fixture
-def mock_openstack_connect_neutron():
-    """Mock get_openstack_conn function for neutron_tools."""
+def mock_openstack_connect_network():
+    """Mock get_openstack_conn function for network_tools."""
     mock_conn = Mock()
 
     with patch(
-        "openstack_mcp_server.tools.neutron_tools.get_openstack_conn",
+        "openstack_mcp_server.tools.network_tools.get_openstack_conn",
         return_value=mock_conn,
     ):
         yield mock_conn

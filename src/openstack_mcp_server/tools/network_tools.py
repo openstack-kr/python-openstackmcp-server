@@ -1,9 +1,11 @@
-from .base import get_openstack_conn
 from fastmcp import FastMCP
-from openstack_mcp_server.tools.response.neutron import Network
+
+from openstack_mcp_server.tools.response.network import Network
+
+from .base import get_openstack_conn
 
 
-class NeutronTools:
+class NetworkTools:
     """
     A class to encapsulate Neutron-related tools and utilities.
     """
@@ -13,14 +15,16 @@ class NeutronTools:
         Register Neutron-related tools with the FastMCP instance.
         """
 
-        mcp.tool()(self.get_neutron_networks)
+        mcp.tool()(self.get_networks)
         mcp.tool()(self.create_network)
         mcp.tool()(self.get_network_detail)
         mcp.tool()(self.update_network)
         mcp.tool()(self.delete_network)
 
-    def get_neutron_networks(
-        self, status_filter: str | None = None, shared_only: bool = False
+    def get_networks(
+        self,
+        status_filter: str | None = None,
+        shared_only: bool = False,
     ) -> list[Network]:
         """
         Get the list of Neutron networks with optional filtering.
