@@ -2,6 +2,7 @@ import pytest
 from openstack import exceptions
 from openstack_mcp_server.tools.identity_tools import IdentityTools, Region
 
+
 class TestIdentityTools:
     """Test cases for IdentityTools class."""
 
@@ -121,13 +122,13 @@ class TestIdentityTools:
         # Verify mock calls
         mock_conn.identity.create_region.assert_called_once_with(id=1, description="Region One description") 
     
-    def test_delete_region_success(self, mock_get_openstack_conn_keystone):
-        """Test deleting a keystone region successfully."""
-        mock_conn = mock_get_openstack_conn_keystone
+    def test_delete_region_success(self, mock_get_openstack_conn_identity):
+        """Test deleting a identity region successfully."""
+        mock_conn = mock_get_openstack_conn_identity
 
         # Test delete_region()
-        keystone_tools = self.get_keystone_tools()
-        result = keystone_tools.delete_region(id="RegionOne")
+        identity_tools = self.get_identity_tools()
+        result = identity_tools.delete_region(id="RegionOne")
         
         # Verify results
         assert result == None
@@ -135,9 +136,9 @@ class TestIdentityTools:
         # Verify mock calls
         mock_conn.identity.delete_region.assert_called_once_with(region="RegionOne", ignore_missing=False)
     
-    def test_delete_region_not_found(self, mock_get_openstack_conn_keystone):
-        """Test deleting a keystone region that does not exist."""
-        mock_conn = mock_get_openstack_conn_keystone
+    def test_delete_region_not_found(self, mock_get_openstack_conn_identity):
+        """Test deleting a identity region that does not exist."""
+        mock_conn = mock_get_openstack_conn_identity
 
         # Configure mock to raise NotFoundException
         mock_conn.identity.delete_region.side_effect = exceptions.NotFoundException(
@@ -145,18 +146,18 @@ class TestIdentityTools:
         )
 
         # Test delete_region()
-        keystone_tools = self.get_keystone_tools()
+        identity_tools = self.get_identity_tools()
         
         # Verify exception is raised
         with pytest.raises(exceptions.NotFoundException, match="Region 'RegionOne' not found"):
-            keystone_tools.delete_region(id="RegionOne")
+            identity_tools.delete_region(id="RegionOne")
         
         # Verify mock calls
         mock_conn.identity.delete_region.assert_called_once_with(region="RegionOne", ignore_missing=False)
     
-    def test_update_region_success(self, mock_get_openstack_conn_keystone):
-        """Test updating a keystone region successfully."""
-        mock_conn = mock_get_openstack_conn_keystone
+    def test_update_region_success(self, mock_get_openstack_conn_identity):
+        """Test updating a identity region successfully."""
+        mock_conn = mock_get_openstack_conn_identity
 
         # Create mock region object
         mock_region = Mock()
@@ -167,8 +168,8 @@ class TestIdentityTools:
         mock_conn.identity.update_region.return_value = mock_region
 
         # Test update_region()
-        keystone_tools = self.get_keystone_tools()
-        result = keystone_tools.update_region(id="RegionOne", description="Region One description")
+        identity_tools = self.get_identity_tools()
+        result = identity_tools.update_region(id="RegionOne", description="Region One description")
         
         # Verify results
         assert result == Region(id="RegionOne", description="Region One description")
@@ -176,9 +177,9 @@ class TestIdentityTools:
         # Verify mock calls
         mock_conn.identity.update_region.assert_called_once_with(region="RegionOne", description="Region One description")
     
-    def test_update_region_without_description(self, mock_get_openstack_conn_keystone):
-        """Test updating a keystone region without a description."""
-        mock_conn = mock_get_openstack_conn_keystone
+    def test_update_region_without_description(self, mock_get_openstack_conn_identity):
+        """Test updating a identity region without a description."""
+        mock_conn = mock_get_openstack_conn_identity
 
         # Create mock region object
         mock_region = Mock()
@@ -189,8 +190,8 @@ class TestIdentityTools:
         mock_conn.identity.update_region.return_value = mock_region
 
         # Test update_region()
-        keystone_tools = self.get_keystone_tools()
-        result = keystone_tools.update_region(id="RegionOne")
+        identity_tools = self.get_identity_tools()
+        result = identity_tools.update_region(id="RegionOne")
         
         # Verify results
         assert result == Region(id="RegionOne")
@@ -198,9 +199,9 @@ class TestIdentityTools:
         # Verify mock calls
         mock_conn.identity.update_region.assert_called_once_with(region="RegionOne", description="")
     
-    def test_update_region_invalid_id_format(self, mock_get_openstack_conn_keystone):
-        """Test updating a keystone region with an invalid ID format."""
-        mock_conn = mock_get_openstack_conn_keystone
+    def test_update_region_invalid_id_format(self, mock_get_openstack_conn_identity):
+        """Test updating a identity region with an invalid ID format."""
+        mock_conn = mock_get_openstack_conn_identity
 
         # Configure mock region.update_region() to raise an exception
         mock_conn.identity.update_region.side_effect = exceptions.BadRequestException(
@@ -208,18 +209,18 @@ class TestIdentityTools:
         )
 
         # Test update_region()
-        keystone_tools = self.get_keystone_tools()
+        identity_tools = self.get_identity_tools()
 
         # Verify exception is raised
         with pytest.raises(exceptions.BadRequestException, match="Invalid input for field 'id': Expected string, got integer"):
-            keystone_tools.update_region(id=1, description="Region One description")
+            identity_tools.update_region(id=1, description="Region One description")
         
         # Verify mock calls
         mock_conn.identity.update_region.assert_called_once_with(region=1, description="Region One description")
     
-    def test_get_region_success(self, mock_get_openstack_conn_keystone):
-        """Test getting a keystone region successfully."""
-        mock_conn = mock_get_openstack_conn_keystone
+    def test_get_region_success(self, mock_get_openstack_conn_identity):
+        """Test getting a identity region successfully."""
+        mock_conn = mock_get_openstack_conn_identity
 
         # Create mock region object
         mock_region = Mock()
@@ -230,8 +231,8 @@ class TestIdentityTools:
         mock_conn.identity.get_region.return_value = mock_region
 
         # Test get_region()
-        keystone_tools = self.get_keystone_tools()
-        result = keystone_tools.get_region(id="RegionOne")
+        identity_tools = self.get_identity_tools()
+        result = identity_tools.get_region(id="RegionOne")
         
         # Verify results
         assert result == Region(id="RegionOne", description="Region One description")
@@ -239,9 +240,9 @@ class TestIdentityTools:
         # Verify mock calls
         mock_conn.identity.get_region.assert_called_once_with(region="RegionOne")
     
-    def test_get_region_not_found(self, mock_get_openstack_conn_keystone):
-        """Test getting a keystone region that does not exist."""
-        mock_conn = mock_get_openstack_conn_keystone
+    def test_get_region_not_found(self, mock_get_openstack_conn_identity):
+        """Test getting a identity region that does not exist."""
+        mock_conn = mock_get_openstack_conn_identity
 
         # Configure mock to raise NotFoundException
         mock_conn.identity.get_region.side_effect = exceptions.NotFoundException(
@@ -249,11 +250,11 @@ class TestIdentityTools:
         )
         
         # Test get_region()
-        keystone_tools = self.get_keystone_tools()
+        identity_tools = self.get_identity_tools()
         
         # Verify exception is raised
         with pytest.raises(exceptions.NotFoundException, match="Region 'RegionOne' not found"):
-            keystone_tools.get_region(id="RegionOne")
+            identity_tools.get_region(id="RegionOne")
         
         # Verify mock calls
         mock_conn.identity.get_region.assert_called_once_with(region="RegionOne")
