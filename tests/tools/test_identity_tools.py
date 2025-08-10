@@ -1,6 +1,7 @@
 import pytest
 from openstack import exceptions
 from openstack_mcp_server.tools.identity_tools import IdentityTools, Region
+from unittest.mock import Mock
 
 
 class TestIdentityTools:
