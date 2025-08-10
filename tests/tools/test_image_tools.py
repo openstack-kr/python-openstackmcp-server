@@ -1,6 +1,7 @@
-import pytest
 from unittest.mock import Mock
+
 from openstack_mcp_server.tools.image_tools import ImageTools
+
 
 class TestImageTools:
     """Test cases for ImageTools class."""

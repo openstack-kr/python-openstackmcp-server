@@ -1,6 +1,7 @@
+from fastmcp import FastMCP
+
 from .base import get_openstack_conn
 from .response.keystone import Region
-from fastmcp import FastMCP
 
 
 class IdentityTools:
@@ -92,9 +93,9 @@ class IdentityTools:
         conn = get_openstack_conn()
 
         updated_region = conn.identity.update_region(
-            region=id, description=description
+            region=id, description=description,
         )
 
         return Region(
-            id=updated_region.id, description=updated_region.description
+            id=updated_region.id, description=updated_region.description,
         )
