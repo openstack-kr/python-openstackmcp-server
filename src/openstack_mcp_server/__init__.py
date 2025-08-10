@@ -23,7 +23,10 @@ def main():
     """Openstack MCP Server main entry point."""
     try:
         # Import here to avoid circular imports
-        from openstack_mcp_server.config import MCP_TRANSPORT
+        from openstack_mcp_server.config import (
+            MCP_TRANSPORT,
+            SUPPORTED_TRANSPORTS,
+        )
         from openstack_mcp_server.server import serve
 
         parser = argparse.ArgumentParser(
@@ -34,23 +37,14 @@ def main():
         signal.signal(signal.SIGINT, handle_interrupt)
         signal.signal(signal.SIGTERM, handle_interrupt)
 
-        # Validate transport protocol
-        if MCP_TRANSPORT not in ["stdio", "sse", "streamable-http"]:
-            logger.error(
-                f"Invalid transport protocol: {MCP_TRANSPORT}. Using stdio instead.",
-            )
-            transport = "stdio"
-        else:
-            transport = MCP_TRANSPORT
-
-        # Start the server
-        logger.info(
-            f"Starting Openstack MCP Server with {transport} transport",
-        )
-
         args = parser.parse_args()
 
-        serve(transport=transport, **vars(args))
+        serve(
+            transport=MCP_TRANSPORT, 
+            supported_transports=SUPPORTED_TRANSPORTS,
+            log_transport=lambda chosen: logger.info(f"Starting Openstack MCP Server with {chosen} transport"),
+            **vars(args),
+            )
 
     except KeyboardInterrupt:
         logger.info("Keyboard interrupt received. Shutting down gracefully...")
