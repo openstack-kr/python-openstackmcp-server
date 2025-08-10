@@ -1,7 +1,10 @@
-import pytest
-from openstack import exceptions
-from openstack_mcp_server.tools.identity_tools import IdentityTools, Region
 from unittest.mock import Mock
+
+import pytest
+
+from openstack import exceptions
+
+from openstack_mcp_server.tools.identity_tools import IdentityTools, Region
 
 
 class TestIdentityTools:
@@ -77,7 +80,7 @@ class TestIdentityTools:
         
         # Verify results
         assert result == Region(
-            id="RegionOne", description="Region One description"
+            id="RegionOne", description="Region One description",
         )
 
         # Verify mock calls
@@ -109,7 +112,7 @@ class TestIdentityTools:
         # Configure mock region.create_region() to raise an exception
         mock_conn.identity.create_region.side_effect = (
             exceptions.BadRequestException(
-                "Invalid input for field 'id': Expected string, got integer"
+                "Invalid input for field 'id': Expected string, got integer",
             )
         )
 
@@ -132,7 +135,7 @@ class TestIdentityTools:
         result = identity_tools.delete_region(id="RegionOne")
         
         # Verify results
-        assert result == None
+        assert result is None
         
         # Verify mock calls
         mock_conn.identity.delete_region.assert_called_once_with(region="RegionOne", ignore_missing=False)
@@ -143,7 +146,7 @@ class TestIdentityTools:
 
         # Configure mock to raise NotFoundException
         mock_conn.identity.delete_region.side_effect = exceptions.NotFoundException(
-            "Region 'RegionOne' not found"
+            "Region 'RegionOne' not found",
         )
 
         # Test delete_region()
@@ -206,7 +209,7 @@ class TestIdentityTools:
 
         # Configure mock region.update_region() to raise an exception
         mock_conn.identity.update_region.side_effect = exceptions.BadRequestException(
-            "Invalid input for field 'id': Expected string, got integer"
+            "Invalid input for field 'id': Expected string, got integer",
         )
 
         # Test update_region()
@@ -247,7 +250,7 @@ class TestIdentityTools:
 
         # Configure mock to raise NotFoundException
         mock_conn.identity.get_region.side_effect = exceptions.NotFoundException(
-            "Region 'RegionOne' not found"
+            "Region 'RegionOne' not found",
         )
         
         # Test get_region()

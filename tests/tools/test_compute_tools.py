@@ -1,6 +1,8 @@
 from unittest.mock import Mock, call
-from openstack_mcp_server.tools.response.compute import Server
+
 from openstack_mcp_server.tools.compute_tools import ComputeTools
+from openstack_mcp_server.tools.response.compute import Server
+
 
 class TestComputeTools:
     """Test cases for ComputeTools class."""
@@ -76,7 +78,7 @@ class TestComputeTools:
         result = compute_tools.get_compute_servers()
 
         expected_output = [
-            Server(name="test-server", id="single-123", status="BUILDING")
+            Server(name="test-server", id="single-123", status="BUILDING"),
         ]
         assert result == expected_output
 
@@ -142,7 +144,7 @@ class TestComputeTools:
 
         assert (
             Server(
-                name="web-server_test-01", id="id-with-dashes", status="ACTIVE"
+                name="web-server_test-01", id="id-with-dashes", status="ACTIVE",
             )
             in result
         )
@@ -165,7 +167,7 @@ class TestComputeTools:
         
         mock_tool_decorator.assert_has_calls([
             call(compute_tools.get_compute_servers),
-            call(compute_tools.get_compute_server)
+            call(compute_tools.get_compute_server),
         ])
         assert mock_tool_decorator.call_count == 2
 
