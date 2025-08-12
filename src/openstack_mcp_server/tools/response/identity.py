@@ -6,3 +6,9 @@ from pydantic import BaseModel
 class Region(BaseModel):
     id: str
     description: str = ""
+
+class Domain(BaseModel):
+    id: str
+    name: str
+    description: str = ""
+    is_enabled: bool = False

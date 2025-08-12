@@ -4,7 +4,8 @@ import pytest
 
 from openstack import exceptions
 
-from openstack_mcp_server.tools.identity_tools import IdentityTools, Region
+from openstack_mcp_server.tools.identity_tools import IdentityTools
+from openstack_mcp_server.tools.response.identity import Region, Domain
 
 
 class TestIdentityTools:
@@ -334,3 +335,96 @@ class TestIdentityTools:
         mock_conn.identity.get_region.assert_called_once_with(
             region="RegionOne",
         )
+        
+    def test_get_domains_success(self, mock_get_openstack_conn_identity):
+        """Test getting identity domains successfully."""
+        mock_conn = mock_get_openstack_conn_identity
+
+        # Create mock domain objects
+        mock_domain1 = Mock()
+        mock_domain1.id = "domainone"
+        mock_domain1.name = "DomainOne"
+        mock_domain1.description = "Domain One description"
+        mock_domain1.is_enabled = True
+
+        mock_domain2 = Mock()
+        mock_domain2.id = "domaintwo"
+        mock_domain2.name = "DomainTwo"
+        mock_domain2.description = "Domain Two description"
+        mock_domain2.is_enabled = False
+        
+        # Configure mock domain.domains()
+        mock_conn.identity.domains.return_value = [mock_domain1, mock_domain2]
+
+        # Test get_domains()
+        identity_tools = self.get_identity_tools()
+        result = identity_tools.get_domains()
+        
+        # Verify results
+        assert result == [
+            Domain(id="domainone", name="DomainOne", description="Domain One description", is_enabled=True),
+            Domain(id="domaintwo", name="DomainTwo", description="Domain Two description", is_enabled=False),
+        ]
+
+        # Verify mock calls
+        mock_conn.identity.domains.assert_called_once()
+
+    def test_get_domains_empty_list(self, mock_get_openstack_conn_identity):
+        """Test getting identity domains when there are no domains."""
+        mock_conn = mock_get_openstack_conn_identity
+        
+        # Empty domain list
+        mock_conn.identity.domains.return_value = []
+
+        # Test get_domains()
+        identity_tools = self.get_identity_tools()
+        result = identity_tools.get_domains()
+        
+        # Verify results
+        assert result == []
+        
+        # Verify mock calls
+        mock_conn.identity.domains.assert_called_once()
+
+    def test_get_domain_success(self, mock_get_openstack_conn_identity):
+        """Test getting a identity domain successfully."""
+        mock_conn = mock_get_openstack_conn_identity
+
+        # Create mock domain object
+        mock_domain = Mock()
+        mock_domain.id = "domainone"
+        mock_domain.name = "DomainOne"
+        mock_domain.description = "Domain One description"
+        mock_domain.is_enabled = True
+        
+        # Configure mock domain.get_domain()
+        mock_conn.identity.get_domain.return_value = mock_domain
+        
+        # Test get_domain()
+        identity_tools = self.get_identity_tools()
+        result = identity_tools.get_domain(id="domainone")
+        
+        # Verify results
+        assert result == Domain(id="domainone", name="DomainOne", description="Domain One description", is_enabled=True)
+        
+        # Verify mock calls
+        mock_conn.identity.get_domain.assert_called_once_with(domain="domainone")
+        
+    def test_get_domain_not_found(self, mock_get_openstack_conn_identity):
+        """Test getting a identity domain that does not exist."""
+        mock_conn = mock_get_openstack_conn_identity
+
+        # Configure mock to raise NotFoundException
+        mock_conn.identity.get_domain.side_effect = exceptions.NotFoundException(
+            "Domain 'domainone' not found",
+        )
+        
+        # Test get_domain()
+        identity_tools = self.get_identity_tools()
+        
+        # Verify exception is raised
+        with pytest.raises(exceptions.NotFoundException, match="Domain 'domainone' not found"):
+            identity_tools.get_domain(id="domainone")
+        
+        # Verify mock calls
+        mock_conn.identity.get_domain.assert_called_once_with(domain="domainone")
