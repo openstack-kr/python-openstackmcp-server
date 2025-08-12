@@ -19,6 +19,9 @@ class IdentityTools:
         mcp.tool()(self.create_region)
         mcp.tool()(self.delete_region)
         mcp.tool()(self.update_region)
+        
+        mcp.tool()(self.get_domains)
+        mcp.tool()(self.get_domain)
 
     def get_regions(self) -> list[Region]:
         """
