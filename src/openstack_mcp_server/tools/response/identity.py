@@ -7,6 +7,7 @@ class Region(BaseModel):
     id: str
     description: str = ""
 
+
 class Domain(BaseModel):
     id: str
     name: str
