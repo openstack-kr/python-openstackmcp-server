@@ -1,14 +1,7 @@
 from unittest.mock import Mock, call
 
 from openstack_mcp_server.tools.compute_tools import ComputeTools
-from openstack_mcp_server.tools.response.compute import (
-    Flavor,
-    Server,
-    ServerFlavor,
-    ServerImage,
-    ServerIp,
-    ServerSecurityGroup,
-)
+from openstack_mcp_server.tools.response.compute import Flavor, Server
 
 
 class TestComputeTools:
@@ -80,31 +73,31 @@ class TestComputeTools:
                 id="434eb822-3fbd-44a1-a000-3b511ac9b516",
                 name="web-server-01",
                 status="ACTIVE",
-                flavor=ServerFlavor(id=None, name="m1.tiny"),
-                image=ServerImage(id="de527f30-d078-41f4-8f18-a23bf2d39366"),
+                flavor=Server.Flavor(id=None, name="m1.tiny"),
+                image=Server.Image(id="de527f30-d078-41f4-8f18-a23bf2d39366"),
                 addresses={
                     "private": [
-                        ServerIp(addr="192.168.1.10", version=4, type="fixed"),
+                        Server.IPAddress(addr="192.168.1.10", version=4, type="fixed"),
                     ],
                 },
                 key_name="my-key",
-                security_groups=[ServerSecurityGroup(name="default")],
+                security_groups=[Server.SecurityGroup(name="default")],
             ),
             Server(
                 id="ffd071fe-1334-45f6-8894-5b0bcac262a6",
                 name="db-server-01",
                 status="SHUTOFF",
-                flavor=ServerFlavor(id=None, name="m1.small"),
-                image=ServerImage(id="3d897e0e-4117-46bb-ae77-e734bb16a1ca"),
+                flavor=Server.Flavor(id=None, name="m1.small"),
+                image=Server.Image(id="3d897e0e-4117-46bb-ae77-e734bb16a1ca"),
                 addresses={
                     "net1": [
-                        ServerIp(addr="192.168.1.11", version=4, type="fixed"),
+                        Server.IPAddress(addr="192.168.1.11", version=4, type="fixed"),
                     ],
                 },
                 key_name=None,
                 security_groups=[
-                    ServerSecurityGroup(name="default"),
-                    ServerSecurityGroup(name="group1"),
+                    Server.SecurityGroup(name="default"),
+                    Server.SecurityGroup(name="group1"),
                 ],
             ),
         ]
