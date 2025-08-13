@@ -2,7 +2,10 @@ from typing import Any
 
 from fastmcp import FastMCP
 
-from openstack_mcp_server.tools.response.compute import Server
+from openstack_mcp_server.tools.response.compute import (
+    Flavor,
+    Server,
+)
 
 from .base import get_openstack_conn
 
@@ -16,10 +19,10 @@ class ComputeTools:
         """
         Register Compute-related tools with the FastMCP instance.
         """
-
         mcp.tool()(self.get_servers)
         mcp.tool()(self.get_server)
         mcp.tool()(self.create_server)
+        mcp.tool()(self.get_flavors)
 
     def get_servers(self) -> list[Server]:
         """
@@ -60,7 +63,7 @@ class ComputeTools:
 
         :param name: The name of the server.
         :param image: The ID of the image to use.
-        :param flavor: The (integer) ID of the flavor to use.
+        :param flavor: The ID of the flavor to use.
         :param network: The ID of the network to attach.
         :param key_name: The name of the key pair to use.
         :param security_groups: A list of security group names to attach.
@@ -87,3 +90,15 @@ class ComputeTools:
         server = conn.compute.get_server(resp.id)
 
         return Server(**server)
+
+    def get_flavors(self) -> list[Flavor]:
+        """
+        Get flavors (server hardware configurations).
+
+        :return: A list of Flavor objects.
+        """
+        conn = get_openstack_conn()
+        flavor_list = []
+        for flavor in conn.compute.flavors():
+            flavor_list.append(Flavor(**flavor))
+        return flavor_list

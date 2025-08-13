@@ -3,8 +3,9 @@ from unittest.mock import Mock, call
 from openstack_mcp_server.tools.compute_tools import ComputeTools
 from openstack_mcp_server.tools.response.compute import (
     Flavor,
-    Image,
     Server,
+    ServerFlavor,
+    ServerImage,
     ServerIp,
     ServerSecurityGroup,
 )
@@ -79,8 +80,8 @@ class TestComputeTools:
                 id="434eb822-3fbd-44a1-a000-3b511ac9b516",
                 name="web-server-01",
                 status="ACTIVE",
-                flavor=Flavor(id=None, name="m1.tiny"),
-                image=Image(id="de527f30-d078-41f4-8f18-a23bf2d39366"),
+                flavor=ServerFlavor(id=None, name="m1.tiny"),
+                image=ServerImage(id="de527f30-d078-41f4-8f18-a23bf2d39366"),
                 addresses={
                     "private": [
                         ServerIp(addr="192.168.1.10", version=4, type="fixed"),
@@ -93,8 +94,8 @@ class TestComputeTools:
                 id="ffd071fe-1334-45f6-8894-5b0bcac262a6",
                 name="db-server-01",
                 status="SHUTOFF",
-                flavor=Flavor(id=None, name="m1.small"),
-                image=Image(id="3d897e0e-4117-46bb-ae77-e734bb16a1ca"),
+                flavor=ServerFlavor(id=None, name="m1.small"),
+                image=ServerImage(id="3d897e0e-4117-46bb-ae77-e734bb16a1ca"),
                 addresses={
                     "net1": [
                         ServerIp(addr="192.168.1.11", version=4, type="fixed"),
@@ -258,9 +259,10 @@ class TestComputeTools:
                 call(compute_tools.get_servers),
                 call(compute_tools.get_server),
                 call(compute_tools.create_server),
+                call(compute_tools.get_flavors),
             ],
         )
-        assert mock_tool_decorator.call_count == 3
+        assert mock_tool_decorator.call_count == 4
 
     def test_compute_tools_instantiation(self):
         """Test ComputeTools can be instantiated."""
@@ -279,3 +281,67 @@ class TestComputeTools:
         assert docstring is not None
         assert "Get the list of Compute servers" in docstring
         assert "return" in docstring.lower() or "Return" in docstring
+
+    def test_get_flavors_success(self, mock_get_openstack_conn):
+        """Test getting flavors successfully."""
+        mock_conn = mock_get_openstack_conn
+
+        # Create mock flavor objects
+        mock_flavor1 = {
+            "id": "1",
+            "name": "m1.tiny",
+            "vcpus": 1,
+            "ram": 512,
+            "disk": 1,
+            "swap": 0,
+            "os-flavor-access:is_public": True,
+        }
+
+        mock_flavor2 = {
+            "id": "2",
+            "name": "m1.small",
+            "vcpus": 2,
+            "ram": 2048,
+            "disk": 20,
+            "swap": 0,
+            "os-flavor-access:is_public": True,
+        }
+
+        mock_conn.compute.flavors.return_value = [mock_flavor1, mock_flavor2]
+
+        compute_tools = ComputeTools()
+        result = compute_tools.get_flavors()
+
+        expected_output = [
+            Flavor(
+                id="1",
+                name="m1.tiny",
+                vcpus=1,
+                ram=512,
+                disk=1,
+                swap=0,
+                is_public=True,
+            ),
+            Flavor(
+                id="2",
+                name="m1.small",
+                vcpus=2,
+                ram=2048,
+                disk=20,
+                swap=0,
+                is_public=True,
+            ),
+        ]
+        assert result == expected_output
+        mock_conn.compute.flavors.assert_called_once()
+
+    def test_get_flavors_empty_list(self, mock_get_openstack_conn):
+        """Test getting flavors when no flavors exist."""
+        mock_conn = mock_get_openstack_conn
+        mock_conn.compute.flavors.return_value = []
+
+        compute_tools = ComputeTools()
+        result = compute_tools.get_flavors()
+
+        assert result == []
+        mock_conn.compute.flavors.assert_called_once()
