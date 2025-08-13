@@ -77,7 +77,11 @@ class TestComputeTools:
                 image=Server.Image(id="de527f30-d078-41f4-8f18-a23bf2d39366"),
                 addresses={
                     "private": [
-                        Server.IPAddress(addr="192.168.1.10", version=4, type="fixed"),
+                        Server.IPAddress(
+                            addr="192.168.1.10",
+                            version=4,
+                            type="fixed",
+                        ),
                     ],
                 },
                 key_name="my-key",
@@ -91,7 +95,11 @@ class TestComputeTools:
                 image=Server.Image(id="3d897e0e-4117-46bb-ae77-e734bb16a1ca"),
                 addresses={
                     "net1": [
-                        Server.IPAddress(addr="192.168.1.11", version=4, type="fixed"),
+                        Server.IPAddress(
+                            addr="192.168.1.11",
+                            version=4,
+                            type="fixed",
+                        ),
                     ],
                 },
                 key_name=None,
