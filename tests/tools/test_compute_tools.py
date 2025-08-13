@@ -142,7 +142,7 @@ class TestComputeTools:
 
         compute_tools = ComputeTools()
         result = compute_tools.get_server(
-            "fe4b6b9b-090c-4dee-ab27-5155476e8e7d"
+            "fe4b6b9b-090c-4dee-ab27-5155476e8e7d",
         )
 
         expected_output = Server(
@@ -152,7 +152,7 @@ class TestComputeTools:
         )
         assert result == expected_output
         mock_conn.compute.get_server.assert_called_once_with(
-            "fe4b6b9b-090c-4dee-ab27-5155476e8e7d"
+            "fe4b6b9b-090c-4dee-ab27-5155476e8e7d",
         )
 
     def test_create_server_success(self, mock_get_openstack_conn):

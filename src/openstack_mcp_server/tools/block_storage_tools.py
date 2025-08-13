@@ -1,9 +1,10 @@
+from fastmcp import FastMCP
+
+from .base import get_openstack_conn
 from .response.block_storage import (
     Volume,
     VolumeAttachment,
 )
-from .base import get_openstack_conn
-from fastmcp import FastMCP
 
 
 class BlockStorageTools:
@@ -39,7 +40,7 @@ class BlockStorageTools:
                         server_id=attachment.get("server_id"),
                         device=attachment.get("device"),
                         attachment_id=attachment.get("id"),
-                    )
+                    ),
                 )
 
             volume_list.append(
@@ -57,7 +58,7 @@ class BlockStorageTools:
                     is_encrypted=volume.is_encrypted,
                     description=volume.description,
                     attachments=attachments,
-                )
+                ),
             )
 
         return volume_list
@@ -80,7 +81,7 @@ class BlockStorageTools:
                     server_id=attachment.get("server_id"),
                     device=attachment.get("device"),
                     attachment_id=attachment.get("id"),
-                )
+                ),
             )
 
         return Volume(
@@ -133,7 +134,10 @@ class BlockStorageTools:
             volume_kwargs["availability_zone"] = availability_zone
 
         volume = conn.block_storage.create_volume(
-            size=size, image=image, bootable=bootable, **volume_kwargs
+            size=size,
+            image=image,
+            bootable=bootable,
+            **volume_kwargs,
         )
 
         volume_obj = Volume(
@@ -162,7 +166,11 @@ class BlockStorageTools:
         """
         conn = get_openstack_conn()
 
-        conn.block_storage.delete_volume(volume_id, force=force, ignore_missing=False)
+        conn.block_storage.delete_volume(
+            volume_id,
+            force=force,
+            ignore_missing=False,
+        )
 
     def extend_volume(self, volume_id: str, new_size: int) -> None:
         """

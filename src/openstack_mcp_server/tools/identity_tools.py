@@ -1,7 +1,7 @@
 from fastmcp import FastMCP
 
 from .base import get_openstack_conn
-from .response.identity import Region, Domain
+from .response.identity import Domain, Region
 
 
 class IdentityTools:
@@ -19,7 +19,7 @@ class IdentityTools:
         mcp.tool()(self.create_region)
         mcp.tool()(self.delete_region)
         mcp.tool()(self.update_region)
-        
+
         mcp.tool()(self.get_domains)
         mcp.tool()(self.get_domain)
 
@@ -103,7 +103,7 @@ class IdentityTools:
             id=updated_region.id,
             description=updated_region.description,
         )
-        
+
     def get_domains(self) -> list[Domain]:
         """
         Get the list of Identity domains.
@@ -115,7 +115,12 @@ class IdentityTools:
         domain_list = []
         for domain in conn.identity.domains():
             domain_list.append(
-                Domain(id=domain.id, name=domain.name, description=domain.description, is_enabled=domain.is_enabled),
+                Domain(
+                    id=domain.id,
+                    name=domain.name,
+                    description=domain.description,
+                    is_enabled=domain.is_enabled,
+                ),
             )
         return domain_list
 
@@ -128,8 +133,12 @@ class IdentityTools:
         :return: The Domain object.
         """
         conn = get_openstack_conn()
-        
+
         domain = conn.identity.get_domain(domain=id)
 
-        return Domain(id=domain.id, name=domain.name, description=domain.description, is_enabled=domain.is_enabled)
-    
+        return Domain(
+            id=domain.id,
+            name=domain.name,
+            description=domain.description,
+            is_enabled=domain.is_enabled,
+        )

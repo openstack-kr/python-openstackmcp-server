@@ -1,11 +1,13 @@
+from unittest.mock import Mock
+
 import pytest
+
 from openstack_mcp_server.tools.block_storage_tools import BlockStorageTools
 from openstack_mcp_server.tools.response.block_storage import (
     Volume,
     VolumeAttachment,
 )
 
-from unittest.mock import Mock
 
 class TestBlockStorageTools:
     """Test cases for BlockStorageTools class."""
@@ -74,7 +76,8 @@ class TestBlockStorageTools:
         mock_conn.block_storage.volumes.assert_called_once()
 
     def test_get_volumes_empty_list(
-        self, mock_get_openstack_conn_block_storage
+        self,
+        mock_get_openstack_conn_block_storage,
     ):
         """Test getting volumes when no volumes exist."""
         mock_conn = mock_get_openstack_conn_block_storage
@@ -92,7 +95,8 @@ class TestBlockStorageTools:
         mock_conn.block_storage.volumes.assert_called_once()
 
     def test_get_volumes_single_volume(
-        self, mock_get_openstack_conn_block_storage
+        self,
+        mock_get_openstack_conn_block_storage,
     ):
         """Test getting volumes with a single volume."""
         mock_conn = mock_get_openstack_conn_block_storage
@@ -125,7 +129,8 @@ class TestBlockStorageTools:
         mock_conn.block_storage.volumes.assert_called_once()
 
     def test_get_volumes_multiple_statuses(
-        self, mock_get_openstack_conn_block_storage
+        self,
+        mock_get_openstack_conn_block_storage,
     ):
         """Test volumes with various statuses."""
         mock_conn = mock_get_openstack_conn_block_storage
@@ -175,7 +180,8 @@ class TestBlockStorageTools:
         mock_conn.block_storage.volumes.assert_called_once()
 
     def test_get_volumes_with_special_characters(
-        self, mock_get_openstack_conn_block_storage
+        self,
+        mock_get_openstack_conn_block_storage,
     ):
         """Test volumes with special characters in names."""
         mock_conn = mock_get_openstack_conn_block_storage
@@ -229,7 +235,10 @@ class TestBlockStorageTools:
 
         mock_conn.block_storage.volumes.assert_called_once()
 
-    def test_get_volume_details_success(self, mock_get_openstack_conn_block_storage):
+    def test_get_volume_details_success(
+        self,
+        mock_get_openstack_conn_block_storage,
+    ):
         """Test getting volume details successfully."""
         mock_conn = mock_get_openstack_conn_block_storage
 
@@ -268,7 +277,8 @@ class TestBlockStorageTools:
         mock_conn.block_storage.get_volume.assert_called_once_with("vol-123")
 
     def test_get_volume_details_with_attachments(
-        self, mock_get_openstack_conn_block_storage
+        self,
+        mock_get_openstack_conn_block_storage,
     ):
         """Test getting volume details with attachments."""
         mock_conn = mock_get_openstack_conn_block_storage
@@ -323,11 +333,14 @@ class TestBlockStorageTools:
         assert attach2.device == "/dev/vdc"
         assert attach2.attachment_id == "attach-2"
 
-    def test_get_volume_details_error(self, mock_get_openstack_conn_block_storage):
+    def test_get_volume_details_error(
+        self,
+        mock_get_openstack_conn_block_storage,
+    ):
         """Test getting volume details with error."""
         mock_conn = mock_get_openstack_conn_block_storage
         mock_conn.block_storage.get_volume.side_effect = Exception(
-            "Volume not found"
+            "Volume not found",
         )
 
         block_storage_tools = BlockStorageTools()
@@ -336,7 +349,10 @@ class TestBlockStorageTools:
         with pytest.raises(Exception, match="Volume not found"):
             block_storage_tools.get_volume_details("nonexistent-vol")
 
-    def test_create_volume_success(self, mock_get_openstack_conn_block_storage):
+    def test_create_volume_success(
+        self,
+        mock_get_openstack_conn_block_storage,
+    ):
         """Test creating volume successfully."""
         mock_conn = mock_get_openstack_conn_block_storage
 
@@ -358,7 +374,11 @@ class TestBlockStorageTools:
 
         block_storage_tools = BlockStorageTools()
         result = block_storage_tools.create_volume(
-            "new-volume", 10, "Test volume", "ssd", "nova"
+            "new-volume",
+            10,
+            "Test volume",
+            "ssd",
+            "nova",
         )
 
         # Verify result is a Volume object
@@ -381,7 +401,8 @@ class TestBlockStorageTools:
         )
 
     def test_create_volume_minimal_params(
-        self, mock_get_openstack_conn_block_storage
+        self,
+        mock_get_openstack_conn_block_storage,
     ):
         """Test creating volume with minimal parameters."""
         mock_conn = mock_get_openstack_conn_block_storage
@@ -410,11 +431,15 @@ class TestBlockStorageTools:
         assert result.size == 5
 
         mock_conn.block_storage.create_volume.assert_called_once_with(
-            size=5, image=None, bootable=None, name="minimal-volume"
+            size=5,
+            image=None,
+            bootable=None,
+            name="minimal-volume",
         )
 
     def test_create_volume_with_image_and_bootable(
-        self, mock_get_openstack_conn_block_storage
+        self,
+        mock_get_openstack_conn_block_storage,
     ):
         """Test creating volume with image and bootable parameters."""
         mock_conn = mock_get_openstack_conn_block_storage
@@ -465,7 +490,7 @@ class TestBlockStorageTools:
         """Test creating volume with error."""
         mock_conn = mock_get_openstack_conn_block_storage
         mock_conn.block_storage.create_volume.side_effect = Exception(
-            "Quota exceeded"
+            "Quota exceeded",
         )
 
         block_storage_tools = BlockStorageTools()
@@ -473,7 +498,10 @@ class TestBlockStorageTools:
         with pytest.raises(Exception, match="Quota exceeded"):
             block_storage_tools.create_volume("fail-volume", 100)
 
-    def test_delete_volume_success(self, mock_get_openstack_conn_block_storage):
+    def test_delete_volume_success(
+        self,
+        mock_get_openstack_conn_block_storage,
+    ):
         """Test deleting volume successfully."""
         mock_conn = mock_get_openstack_conn_block_storage
 
@@ -490,7 +518,9 @@ class TestBlockStorageTools:
         # Verify result is None
         assert result is None
         mock_conn.block_storage.delete_volume.assert_called_once_with(
-            "vol-delete", force=False, ignore_missing=False
+            "vol-delete",
+            force=False,
+            ignore_missing=False,
         )
 
     def test_delete_volume_force(self, mock_get_openstack_conn_block_storage):
@@ -510,14 +540,16 @@ class TestBlockStorageTools:
         assert result is None
 
         mock_conn.block_storage.delete_volume.assert_called_once_with(
-            "vol-force-delete", force=True, ignore_missing=False
+            "vol-force-delete",
+            force=True,
+            ignore_missing=False,
         )
 
     def test_delete_volume_error(self, mock_get_openstack_conn_block_storage):
         """Test deleting volume with error."""
         mock_conn = mock_get_openstack_conn_block_storage
         mock_conn.block_storage.delete_volume.side_effect = Exception(
-            "Volume not found"
+            "Volume not found",
         )
 
         block_storage_tools = BlockStorageTools()
@@ -526,7 +558,10 @@ class TestBlockStorageTools:
         with pytest.raises(Exception, match="Volume not found"):
             block_storage_tools.delete_volume("nonexistent-vol")
 
-    def test_extend_volume_success(self, mock_get_openstack_conn_block_storage):
+    def test_extend_volume_success(
+        self,
+        mock_get_openstack_conn_block_storage,
+    ):
         """Test extending volume successfully."""
         mock_conn = mock_get_openstack_conn_block_storage
 
@@ -537,14 +572,18 @@ class TestBlockStorageTools:
         assert result is None
 
         mock_conn.block_storage.extend_volume.assert_called_once_with(
-            "vol-extend", 20
+            "vol-extend",
+            20,
         )
 
-    def test_extend_volume_invalid_size(self, mock_get_openstack_conn_block_storage):
+    def test_extend_volume_invalid_size(
+        self,
+        mock_get_openstack_conn_block_storage,
+    ):
         """Test extending volume with invalid size."""
         mock_conn = mock_get_openstack_conn_block_storage
         mock_conn.block_storage.extend_volume.side_effect = Exception(
-            "Invalid size"
+            "Invalid size",
         )
 
         block_storage_tools = BlockStorageTools()
@@ -556,7 +595,7 @@ class TestBlockStorageTools:
         """Test extending volume with error."""
         mock_conn = mock_get_openstack_conn_block_storage
         mock_conn.block_storage.extend_volume.side_effect = Exception(
-            "Volume busy"
+            "Volume busy",
         )
 
         block_storage_tools = BlockStorageTools()
