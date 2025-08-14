@@ -1,7 +1,7 @@
 from fastmcp import FastMCP
 
 from .base import get_openstack_conn
-from .response.identity import Region, Domain
+from .response.identity import Domain, Region
 
 
 class IdentityTools:
@@ -22,6 +22,7 @@ class IdentityTools:
         
         mcp.tool()(self.get_domains)
         mcp.tool()(self.get_domain)
+        mcp.tool()(self.create_domain)
 
     def get_regions(self) -> list[Region]:
         """
@@ -133,3 +134,25 @@ class IdentityTools:
 
         return Domain(id=domain.id, name=domain.name, description=domain.description, is_enabled=domain.is_enabled)
     
+    def create_domain(self, 
+        id: str, 
+        name: str, 
+        description: str = "",
+        is_enabled: bool = False,
+        ) -> Domain:
+        """
+        Create a new domain.
+
+        :param id: The ID of the domain. (required)
+        :param name: The name of the domain. (required)
+        :param description: The description of the domain. (optional)
+        :param is_enabled: Whether the domain is enabled. (optional)
+
+        :return: The created Domain object.
+        """
+
+        conn = get_openstack_conn()
+
+        domain = conn.identity.create_domain(id=id, name=name, description=description, is_enabled=is_enabled)
+
+        return Domain(id=domain.id, name=domain.name, description=domain.description, is_enabled=domain.is_enabled)
