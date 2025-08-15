@@ -4,11 +4,14 @@ from pydantic import BaseModel, ConfigDict, Field
 class Server(BaseModel):
     class Flavor(BaseModel):
         id: str | None = Field(default=None, exclude=True)
-        name: str = Field(validation_alias="original_name")
+        name: str | None = Field(
+            default=None,
+            validation_alias="original_name",
+        )
         model_config = ConfigDict(validate_by_name=True)
 
     class Image(BaseModel):
-        id: str
+        id: str | None = Field(default=None)
 
     class IPAddress(BaseModel):
         addr: str
