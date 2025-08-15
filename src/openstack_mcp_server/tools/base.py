@@ -1,3 +1,5 @@
+import atexit
+
 import openstack
 
 from openstack import connection
@@ -10,18 +12,26 @@ class OpenStackConnectionManager:
 
     _connection: connection.Connection | None = None
 
-    # TODO: Try/Catch disconnection by token expired case
     @classmethod
     def get_connection(cls) -> connection.Connection:
-        """OpenStack Connection)"""
+        """OpenStack Connection"""
         if cls._connection is None:
             openstack.enable_logging(debug=config.MCP_DEBUG_MODE)
             cls._connection = openstack.connect(cloud=config.MCP_CLOUD_NAME)
+            atexit.register(cls._cleanup)
         return cls._connection
 
-    # TODO: Close connection
+    @classmethod
+    def _cleanup(cls) -> None:
+        """Cleanup method called at program exit"""
+        if cls._connection is not None:
+            cls._connection.close()
+            cls._connection = None
+
+
+_openstack_connection_manager = OpenStackConnectionManager()
 
 
 def get_openstack_conn():
     """Get OpenStack Connection"""
-    return OpenStackConnectionManager.get_connection()
+    return _openstack_connection_manager.get_connection()
