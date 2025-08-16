@@ -1,5 +1,9 @@
 from unittest.mock import Mock, call
 
+import pytest
+
+from openstack.exceptions import ConflictException, NotFoundException
+
 from openstack_mcp_server.tools.compute_tools import ComputeTools
 from openstack_mcp_server.tools.response.compute import Flavor, Server
 
@@ -261,9 +265,10 @@ class TestComputeTools:
                 call(compute_tools.get_server),
                 call(compute_tools.create_server),
                 call(compute_tools.get_flavors),
+                call(compute_tools.action_server),
             ],
         )
-        assert mock_tool_decorator.call_count == 4
+        assert mock_tool_decorator.call_count == 5
 
     def test_compute_tools_instantiation(self):
         """Test ComputeTools can be instantiated."""
@@ -346,3 +351,84 @@ class TestComputeTools:
 
         assert result == []
         mock_conn.compute.flavors.assert_called_once()
+
+    @pytest.mark.parametrize(
+        "action",
+        [
+            "pause",
+            "unpause",
+            "suspend",
+            "resume",
+            "lock",
+            "unlock",
+            "rescue",
+            "unrescue",
+            "start",
+            "stop",
+            "shelve",
+            "shelve_offload",
+            "unshelve",
+        ],
+    )
+    def test_action_server_success(self, mock_get_openstack_conn, action):
+        """Test action_server with all supported actions."""
+        mock_conn = mock_get_openstack_conn
+        server_id = "test-server-id"
+
+        # Mock the action method to avoid calling actual methods
+        action_method = getattr(mock_conn.compute, f"{action}_server")
+        action_method.return_value = None
+
+        compute_tools = ComputeTools()
+        result = compute_tools.action_server(server_id, action)
+
+        # Verify the result is None (void function)
+        assert result is None
+
+        # Verify the correct method was called with server ID
+        action_method.assert_called_once_with(server_id)
+
+    def test_action_server_unsupported_action(self):
+        """Test action_server with unsupported action raises ValueError."""
+        server_id = "test-server-id"
+        unsupported_action = "invalid_action"
+
+        compute_tools = ComputeTools()
+
+        with pytest.raises(
+            ValueError,
+            match=f"Unsupported action: {unsupported_action}",
+        ):
+            compute_tools.action_server(server_id, unsupported_action)
+
+    def test_action_server_not_found(self, mock_get_openstack_conn):
+        """Test action_server when server does not exist."""
+        mock_conn = mock_get_openstack_conn
+        server_id = "non-existent-server-id"
+        action = "pause"
+
+        # Mock the action method to raise NotFoundException
+        mock_conn.compute.pause_server.side_effect = NotFoundException()
+
+        compute_tools = ComputeTools()
+
+        with pytest.raises(NotFoundException):
+            compute_tools.action_server(server_id, action)
+
+        mock_conn.compute.pause_server.assert_called_once_with(server_id)
+
+    def test_action_server_conflict_exception(self, mock_get_openstack_conn):
+        """Test action_server when action cannot be performed due to Conflict Exception."""
+        mock_conn = mock_get_openstack_conn
+        server_id = "test-server-id"
+        action = "start"
+
+        # Mock the action method to raise ConflictException
+        mock_conn.compute.start_server.side_effect = ConflictException()
+
+        compute_tools = ComputeTools()
+
+        with pytest.raises(ConflictException):
+            compute_tools.action_server(server_id, action)
+
+        mock_conn.compute.start_server.assert_called_once_with(server_id)
