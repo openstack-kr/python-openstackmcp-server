@@ -46,7 +46,7 @@ class IdentityTools:
         """
         Get a region.
 
-        :param id: The ID of the region. (required)
+        :param id: The ID of the region.
 
         :return: The Region object.
         """
@@ -56,12 +56,12 @@ class IdentityTools:
 
         return Region(id=region.id, description=region.description)
 
-    def create_region(self, id: str, description: str = "") -> Region:
+    def create_region(self, id: str, description: str | None= None) -> Region:
         """
         Create a new region.
 
-        :param id: The ID of the region. (required)
-        :param description: The description of the region. (optional)
+        :param id: The ID of the region.
+        :param description: The description of the region. 
 
         :return: The created Region object.
         """
@@ -75,7 +75,7 @@ class IdentityTools:
         """
         Delete a region.
 
-        :param id: The ID of the region. (required)
+        :param id: The ID of the region.
 
         :return: None
         """
@@ -86,12 +86,12 @@ class IdentityTools:
 
         return None
 
-    def update_region(self, id: str, description: str = "") -> Region:
+    def update_region(self, id: str, description: str | None = None) -> Region:
         """
         Update a region.
 
-        :param id: The ID of the region. (required)
-        :param description: The string description of the region. (optional)
+        :param id: The ID of the region.
+        :param description: The string description of the region.
 
         :return: The updated Region object.
         """
@@ -131,7 +131,7 @@ class IdentityTools:
         """
         Get a domain.
 
-        :param name: The name of the domain. (required)
+        :param name: The name of the domain.
 
         :return: The Domain object.
         """
@@ -149,15 +149,15 @@ class IdentityTools:
     def create_domain(
         self,
         name: str,
-        description: str = "",
-        is_enabled: bool = False,
+        description: str | None = None,
+        is_enabled: bool  | None = False,
     ) -> Domain:
         """
         Create a new domain.
 
-        :param name: The name of the domain. (required)
-        :param description: The description of the domain. (optional)
-        :param is_enabled: Whether the domain is enabled. (optional)
+        :param name: The name of the domain.
+        :param description: The description of the domain.
+        :param is_enabled: Whether the domain is enabled.
         """
         conn = get_openstack_conn()
 
@@ -178,7 +178,7 @@ class IdentityTools:
         """
         Delete a domain.
 
-        :param name: The name of the domain. (required)
+        :param name: The name of the domain.
         """
         conn = get_openstack_conn()
 
@@ -197,10 +197,10 @@ class IdentityTools:
         """
         Update a domain.
 
-        :param id: The ID of the domain. (required)
-        :param name: The name of the domain. (optional)
-        :param description: The description of the domain. (optional)
-        :param is_enabled: Whether the domain is enabled. (optional)
+        :param id: The ID of the domain.
+        :param name: The name of the domain.
+        :param description: The description of the domain.
+        :param is_enabled: Whether the domain is enabled.
         """
         conn = get_openstack_conn()
 

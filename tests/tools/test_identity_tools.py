@@ -103,7 +103,7 @@ class TestIdentityTools:
         # Create mock region object
         mock_region = Mock()
         mock_region.id = "RegionOne"
-        mock_region.description = ""
+        mock_region.description = None
 
         # Configure mock region.create_region()
         mock_conn.identity.create_region.return_value = mock_region
@@ -233,7 +233,7 @@ class TestIdentityTools:
         # Create mock region object
         mock_region = Mock()
         mock_region.id = "RegionOne"
-        mock_region.description = ""
+        mock_region.description = None
 
         # Configure mock region.update_region()
         mock_conn.identity.update_region.return_value = mock_region
@@ -248,7 +248,7 @@ class TestIdentityTools:
         # Verify mock calls
         mock_conn.identity.update_region.assert_called_once_with(
             region="RegionOne",
-            description="",
+            description=None,
         )
 
     def test_update_region_invalid_id_format(
@@ -519,7 +519,7 @@ class TestIdentityTools:
         mock_domain = Mock()
         mock_domain.id = "d01a81393377480cbd75c0210442e687"
         mock_domain.name = "domainone"
-        mock_domain.description = ""
+        mock_domain.description = None
         mock_domain.is_enabled = False
 
         # Configure mock domain.create_domain()
@@ -533,14 +533,14 @@ class TestIdentityTools:
         assert result == Domain(
             id="d01a81393377480cbd75c0210442e687",
             name="domainone",
-            description="",
+            description=None,
             is_enabled=False,
         )
 
         # Verify mock calls
         mock_conn.identity.create_domain.assert_called_once_with(
             name="domainone",
-            description="",
+            description=None,
             enabled=False,
         )
 

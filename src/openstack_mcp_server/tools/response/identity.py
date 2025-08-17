@@ -5,11 +5,11 @@ from pydantic import BaseModel
 # In this case, we are only using description field as optional.
 class Region(BaseModel):
     id: str
-    description: str = ""
+    description: str | None = None
 
 
 class Domain(BaseModel):
     id: str
     name: str
-    description: str = ""
-    is_enabled: bool = False
+    description: str | None = None
+    is_enabled: bool | None = None
