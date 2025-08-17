@@ -555,20 +555,18 @@ class TestIdentityTools:
         mock_domain.description = "domainone description"
         mock_domain.is_enabled = True
         
-        # Configure mock domain.find_domain() and update_domain()
-        mock_conn.identity.find_domain.return_value = mock_domain
+        # Configure mock domain.update_domain()
         mock_conn.identity.update_domain.return_value = mock_domain
         
         # Test update_domain()
         identity_tools = self.get_identity_tools()
-        result = identity_tools.update_domain(name="domainone", description="domainone description", is_enabled=True)
+        result = identity_tools.update_domain(id="d01a81393377480cbd75c0210442e687", name="domainone", description="domainone description", is_enabled=True)
         
         # Verify results
         assert result == Domain(id="d01a81393377480cbd75c0210442e687", name="domainone", description="domainone description", is_enabled=True)
         
         # Verify mock calls
-        mock_conn.identity.find_domain.assert_called_once_with(name_or_id="domainone")
-        mock_conn.identity.update_domain.assert_called_once_with(domain=mock_domain, name="domainone", description="domainone description", is_enabled=True)
+        mock_conn.identity.update_domain.assert_called_once_with(domain="d01a81393377480cbd75c0210442e687", name="domainone", description="domainone description", is_enabled=True)
         
     
     def test_update_domain_with_empty_args(self, mock_get_openstack_conn_identity):
@@ -582,26 +580,24 @@ class TestIdentityTools:
         mock_domain.description = "domainone description"
         mock_domain.is_enabled = True
         
-        # Configure mock domain.find_domain() and update_domain()
-        mock_conn.identity.find_domain.return_value = mock_domain
+        # Configure mock domain.update_domain()
         mock_conn.identity.update_domain.return_value = mock_domain
         
         # Test update_domain()
         identity_tools = self.get_identity_tools()
-        result = identity_tools.update_domain(name="domainone")
+        result = identity_tools.update_domain(id="d01a81393377480cbd75c0210442e687")
         
         # Verify results
         assert result == Domain(id="d01a81393377480cbd75c0210442e687", name="domainone", description="domainone description", is_enabled=True)
         
         # Verify mock calls
-        mock_conn.identity.find_domain.assert_called_once_with(name_or_id="domainone")
-        mock_conn.identity.update_domain.assert_called_once_with(domain=mock_domain, name="domainone")
+        mock_conn.identity.update_domain.assert_called_once_with(domain="d01a81393377480cbd75c0210442e687")
     
-    def test_update_domain_with_empty_name(self, mock_get_openstack_conn_identity):
+    def test_update_domain_with_empty_id(self, mock_get_openstack_conn_identity):
         """Test updating a identity domain with an empty name."""
         mock_conn = mock_get_openstack_conn_identity
         
-        mock_conn.identity.find_domain.side_effect = exceptions.BadRequestException(
+        mock_conn.identity.update_domain.side_effect = exceptions.BadRequestException(
             "Field required",
         )
         
@@ -610,9 +606,9 @@ class TestIdentityTools:
         
         # Verify exception is raised
         with pytest.raises(exceptions.BadRequestException, match="Field required"):
-            identity_tools.update_domain(name="")
+            identity_tools.update_domain(id="")
         
         # Verify mock calls
-        mock_conn.identity.find_domain.assert_called_once_with(name_or_id="")
+        mock_conn.identity.update_domain.assert_called_once_with(domain="")
     
     

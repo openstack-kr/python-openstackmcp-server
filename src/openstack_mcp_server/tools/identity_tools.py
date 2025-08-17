@@ -163,11 +163,12 @@ class IdentityTools:
 
         return None
     
-    def update_domain(self, name: str, description: str | None = None, is_enabled: bool | None = None) -> Domain:
+    def update_domain(self, id: str, name: str | None = None, description: str | None = None, is_enabled: bool | None = None) -> Domain:
         """
         Update a domain.
 
-        :param name: The name of the domain. (required)
+        :param id: The ID of the domain. (required)
+        :param name: The name of the domain. (optional)
         :param description: The description of the domain. (optional)
         :param is_enabled: Whether the domain is enabled. (optional)
         """
@@ -181,8 +182,7 @@ class IdentityTools:
         if is_enabled is not None:
             args["is_enabled"] = is_enabled
 
-        domain = conn.identity.find_domain(name_or_id=name)
-        updated_domain = conn.identity.update_domain(domain=domain, **args)
+        updated_domain = conn.identity.update_domain(domain=id, **args)
 
         return Domain(id=updated_domain.id, name=updated_domain.name, description=updated_domain.description, is_enabled=updated_domain.is_enabled)
 
