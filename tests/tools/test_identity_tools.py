@@ -6,7 +6,7 @@ import pydantic
 from openstack import exceptions
 
 from openstack_mcp_server.tools.identity_tools import IdentityTools
-from openstack_mcp_server.tools.response.identity import Region, Domain
+from openstack_mcp_server.tools.response.identity import Domain, Region
 
 
 class TestIdentityTools:
@@ -610,5 +610,4 @@ class TestIdentityTools:
         
         # Verify mock calls
         mock_conn.identity.update_domain.assert_called_once_with(domain="")
-    
     

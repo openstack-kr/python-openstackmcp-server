@@ -1,7 +1,7 @@
 from fastmcp import FastMCP
 
 from .base import get_openstack_conn
-from .response.identity import Region, Domain
+from .response.identity import Domain, Region
 
 
 class IdentityTools:
@@ -23,8 +23,11 @@ class IdentityTools:
         mcp.tool()(self.get_domains)
         mcp.tool()(self.get_domain)
         mcp.tool()(self.create_domain)
+<<<<<<< HEAD
         mcp.tool()(self.delete_domain)
         mcp.tool()(self.update_domain)
+=======
+>>>>>>> d7d60da163653af86da9ffa64fb394cbb1ea8c40
 
     def get_regions(self) -> list[Region]:
         """
