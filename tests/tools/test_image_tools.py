@@ -7,9 +7,11 @@ from openstack_mcp_server.tools.request.image import CreateImage
 from openstack_mcp_server.tools.response.image import Image
 
 
-class ImageMockFactory:
+class TestImageTools:
+    """Test cases for ImageTools class."""
+
     @staticmethod
-    def image(**overrides):
+    def image_factory(**overrides):
         defaults = {
             "id": str(uuid.uuid4()),
             "name": "test-image",
@@ -43,10 +45,6 @@ class ImageMockFactory:
                 defaults[key] = value
 
         return defaults
-
-
-class TestImageTools:
-    """Test cases for ImageTools class."""
 
     def test_get_image_images_success(self, mock_get_openstack_conn_image):
         """Test getting image images successfully."""
@@ -130,7 +128,7 @@ class TestImageTools:
         """Test creating an image from a volume ID."""
         volume_id = "6cf57d8d-00ca-43ff-ae6f-56912b69528a"  # Example volume ID
 
-        mock_image = ImageMockFactory.image()
+        mock_image = self.image_factory()
         mock_get_openstack_conn_image.block_storage.create_image.return_value = Mock(
             id=mock_image["id"],
         )
@@ -188,7 +186,7 @@ class TestImageTools:
             allow_duplicates=False,
         )
 
-        mock_image = ImageMockFactory.image(**create_image_data.__dict__)
+        mock_image = self.image_factory(**create_image_data.__dict__)
         mock_create_image = Mock(id=mock_image["id"])
 
         mock_get_openstack_conn_image.image.create_image.return_value = (
