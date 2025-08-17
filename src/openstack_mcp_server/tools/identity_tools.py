@@ -26,6 +26,9 @@ class IdentityTools:
         mcp.tool()(self.delete_domain)
         mcp.tool()(self.update_domain)
 
+        mcp.tool()(self.get_domains)
+        mcp.tool()(self.get_domain)
+
     def get_regions(self) -> list[Region]:
         """
         Get the list of Identity regions.
@@ -106,7 +109,7 @@ class IdentityTools:
             id=updated_region.id,
             description=updated_region.description,
         )
-        
+
     def get_domains(self) -> list[Domain]:
         """
         Get the list of Identity domains.
@@ -185,5 +188,3 @@ class IdentityTools:
         updated_domain = conn.identity.update_domain(domain=id, **args)
 
         return Domain(id=updated_domain.id, name=updated_domain.name, description=updated_domain.description, is_enabled=updated_domain.is_enabled)
-
-        

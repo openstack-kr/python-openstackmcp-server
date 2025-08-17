@@ -1,7 +1,7 @@
 from unittest.mock import Mock
 
-import pytest
 import pydantic
+import pytest
 
 from openstack import exceptions
 
@@ -336,7 +336,7 @@ class TestIdentityTools:
         mock_conn.identity.get_region.assert_called_once_with(
             region="RegionOne",
         )
-        
+
     def test_get_domains_success(self, mock_get_openstack_conn_identity):
         """Test getting identity domains successfully."""
         mock_conn = mock_get_openstack_conn_identity
@@ -353,7 +353,7 @@ class TestIdentityTools:
         mock_domain2.name = "DomainTwo"
         mock_domain2.description = "Domain Two description"
         mock_domain2.is_enabled = False
-        
+
         # Configure mock domain.domains()
         mock_conn.identity.domains.return_value = [mock_domain1, mock_domain2]
 
@@ -373,14 +373,14 @@ class TestIdentityTools:
     def test_get_domains_empty_list(self, mock_get_openstack_conn_identity):
         """Test getting identity domains when there are no domains."""
         mock_conn = mock_get_openstack_conn_identity
-        
+
         # Empty domain list
         mock_conn.identity.domains.return_value = []
 
         # Test get_domains()
         identity_tools = self.get_identity_tools()
         result = identity_tools.get_domains()
-        
+
         # Verify results
         assert result == []
         
@@ -456,7 +456,6 @@ class TestIdentityTools:
     
     def test_create_domain_without_name(self, mock_get_openstack_conn_identity):
         """Test creating a identity domain without a name."""
-        mock_conn = mock_get_openstack_conn_identity
                 
         # Test create_domain()
         identity_tools = self.get_identity_tools()

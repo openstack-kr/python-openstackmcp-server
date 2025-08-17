@@ -61,3 +61,15 @@ def mock_openstack_connect_network():
         return_value=mock_conn,
     ):
         yield mock_conn
+
+
+@pytest.fixture
+def mock_get_openstack_conn_block_storage():
+    """Mock get_openstack_conn function for block_storage_tools."""
+    mock_conn = Mock()
+
+    with patch(
+        "openstack_mcp_server.tools.block_storage_tools.get_openstack_conn",
+        return_value=mock_conn,
+    ):
+        yield mock_conn
