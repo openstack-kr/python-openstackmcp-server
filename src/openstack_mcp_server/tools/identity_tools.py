@@ -19,15 +19,12 @@ class IdentityTools:
         mcp.tool()(self.create_region)
         mcp.tool()(self.delete_region)
         mcp.tool()(self.update_region)
-        
+
         mcp.tool()(self.get_domains)
         mcp.tool()(self.get_domain)
         mcp.tool()(self.create_domain)
         mcp.tool()(self.delete_domain)
         mcp.tool()(self.update_domain)
-
-        mcp.tool()(self.get_domains)
-        mcp.tool()(self.get_domain)
 
     def get_regions(self) -> list[Region]:
         """
@@ -121,7 +118,12 @@ class IdentityTools:
         domain_list = []
         for domain in conn.identity.domains():
             domain_list.append(
-                Domain(id=domain.id, name=domain.name, description=domain.description, is_enabled=domain.is_enabled),
+                Domain(
+                    id=domain.id,
+                    name=domain.name,
+                    description=domain.description,
+                    is_enabled=domain.is_enabled,
+                ),
             )
         return domain_list
 
@@ -134,12 +136,22 @@ class IdentityTools:
         :return: The Domain object.
         """
         conn = get_openstack_conn()
-        
+
         domain = conn.identity.find_domain(name_or_id=name)
 
-        return Domain(id=domain.id, name=domain.name, description=domain.description, is_enabled=domain.is_enabled)
-    
-    def create_domain(self, name: str, description: str = "", is_enabled: bool = False) -> Domain:
+        return Domain(
+            id=domain.id,
+            name=domain.name,
+            description=domain.description,
+            is_enabled=domain.is_enabled,
+        )
+
+    def create_domain(
+        self,
+        name: str,
+        description: str = "",
+        is_enabled: bool = False,
+    ) -> Domain:
         """
         Create a new domain.
 
@@ -149,10 +161,19 @@ class IdentityTools:
         """
         conn = get_openstack_conn()
 
-        domain = conn.identity.create_domain(name=name, description=description, enabled=is_enabled)
+        domain = conn.identity.create_domain(
+            name=name,
+            description=description,
+            enabled=is_enabled,
+        )
 
-        return Domain(id=domain.id, name=domain.name, description=domain.description, is_enabled=domain.is_enabled)
-    
+        return Domain(
+            id=domain.id,
+            name=domain.name,
+            description=domain.description,
+            is_enabled=domain.is_enabled,
+        )
+
     def delete_domain(self, name: str) -> None:
         """
         Delete a domain.
@@ -165,8 +186,14 @@ class IdentityTools:
         conn.identity.delete_domain(domain=domain, ignore_missing=False)
 
         return None
-    
-    def update_domain(self, id: str, name: str | None = None, description: str | None = None, is_enabled: bool | None = None) -> Domain:
+
+    def update_domain(
+        self,
+        id: str,
+        name: str | None = None,
+        description: str | None = None,
+        is_enabled: bool | None = None,
+    ) -> Domain:
         """
         Update a domain.
 
@@ -187,4 +214,9 @@ class IdentityTools:
 
         updated_domain = conn.identity.update_domain(domain=id, **args)
 
-        return Domain(id=updated_domain.id, name=updated_domain.name, description=updated_domain.description, is_enabled=updated_domain.is_enabled)
+        return Domain(
+            id=updated_domain.id,
+            name=updated_domain.name,
+            description=updated_domain.description,
+            is_enabled=updated_domain.is_enabled,
+        )
