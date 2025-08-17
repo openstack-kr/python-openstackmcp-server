@@ -52,9 +52,7 @@ class ImageTools:
             - must provide a glance_region and glance_image_id.
 
         :param image_data: An instance of CreateImage containing the image details.
-        :type image: CreateImage
         :return: An Image object representing the created image.
-        :rtype: Image
         """
         conn = get_openstack_conn()
 
