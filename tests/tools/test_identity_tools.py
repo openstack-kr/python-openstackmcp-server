@@ -1,6 +1,7 @@
 from unittest.mock import Mock
 
 import pytest
+import pydantic
 
 from openstack import exceptions
 
@@ -392,30 +393,30 @@ class TestIdentityTools:
 
         # Create mock domain object
         mock_domain = Mock()
-        mock_domain.id = "domainone"
-        mock_domain.name = "DomainOne"
-        mock_domain.description = "Domain One description"
+        mock_domain.id = "d01a81393377480cbd75c0210442e687"
+        mock_domain.name = "domainone"
+        mock_domain.description = "domainone description"
         mock_domain.is_enabled = True
         
         # Configure mock domain.get_domain()
-        mock_conn.identity.get_domain.return_value = mock_domain
+        mock_conn.identity.find_domain.return_value = mock_domain
         
         # Test get_domain()
         identity_tools = self.get_identity_tools()
-        result = identity_tools.get_domain(id="domainone")
+        result = identity_tools.get_domain(name="domainone")
         
         # Verify results
-        assert result == Domain(id="domainone", name="DomainOne", description="Domain One description", is_enabled=True)
+        assert result == Domain(id="d01a81393377480cbd75c0210442e687", name="domainone", description="domainone description", is_enabled=True)
         
         # Verify mock calls
-        mock_conn.identity.get_domain.assert_called_once_with(domain="domainone")
+        mock_conn.identity.find_domain.assert_called_once_with(name_or_id="domainone")
         
     def test_get_domain_not_found(self, mock_get_openstack_conn_identity):
         """Test getting a identity domain that does not exist."""
         mock_conn = mock_get_openstack_conn_identity
 
         # Configure mock to raise NotFoundException
-        mock_conn.identity.get_domain.side_effect = exceptions.NotFoundException(
+        mock_conn.identity.find_domain.side_effect = exceptions.NotFoundException(
             "Domain 'domainone' not found",
         )
         
@@ -424,7 +425,194 @@ class TestIdentityTools:
         
         # Verify exception is raised
         with pytest.raises(exceptions.NotFoundException, match="Domain 'domainone' not found"):
-            identity_tools.get_domain(id="domainone")
+            identity_tools.get_domain(name="domainone")
         
         # Verify mock calls
-        mock_conn.identity.get_domain.assert_called_once_with(domain="domainone")
+        mock_conn.identity.find_domain.assert_called_once_with(name_or_id="domainone")
+
+    def test_create_domain_success(self, mock_get_openstack_conn_identity):
+        """Test creating a identity domain successfully."""
+        mock_conn = mock_get_openstack_conn_identity
+
+        # Create mock domain object
+        mock_domain = Mock()
+        mock_domain.id = "d01a81393377480cbd75c0210442e687"
+        mock_domain.name = "domainone"
+        mock_domain.description = "domainone description"
+        mock_domain.is_enabled = True
+        
+        # Configure mock domain.create_domain()
+        mock_conn.identity.create_domain.return_value = mock_domain
+        
+        # Test create_domain()
+        identity_tools = self.get_identity_tools()
+        result = identity_tools.create_domain(name="domainone", description="domainone description", is_enabled=True)
+        
+        # Verify results
+        assert result == Domain(id="d01a81393377480cbd75c0210442e687", name="domainone", description="domainone description", is_enabled=True)
+        
+        # Verify mock calls
+        mock_conn.identity.create_domain.assert_called_once_with(name="domainone", description="domainone description", enabled=True)
+    
+    def test_create_domain_without_name(self, mock_get_openstack_conn_identity):
+        """Test creating a identity domain without a name."""
+        mock_conn = mock_get_openstack_conn_identity
+                
+        # Test create_domain()
+        identity_tools = self.get_identity_tools()
+        
+        # Verify pydantic validation exception is raised
+        with pytest.raises(pydantic.ValidationError):
+            identity_tools.create_domain(name="", description="domainone description", is_enabled=False)
+        
+    def test_create_domain_without_description(self, mock_get_openstack_conn_identity):
+        """Test creating a identity domain without a description."""
+        mock_conn = mock_get_openstack_conn_identity
+        
+        # Create mock domain object
+        mock_domain = Mock()
+        mock_domain.id = "d01a81393377480cbd75c0210442e687"
+        mock_domain.name = "domainone"
+        mock_domain.description = ""
+        mock_domain.is_enabled = False
+        
+        # Configure mock domain.create_domain()
+        mock_conn.identity.create_domain.return_value = mock_domain
+        
+        # Test create_domain()
+        identity_tools = self.get_identity_tools()
+        result = identity_tools.create_domain(name="domainone")
+        
+        # Verify results
+        assert result == Domain(id="d01a81393377480cbd75c0210442e687", name="domainone", description="", is_enabled=False)
+        
+        # Verify mock calls
+        mock_conn.identity.create_domain.assert_called_once_with(name="domainone", description="", enabled=False)
+    
+    
+    def test_delete_domain_success(self, mock_get_openstack_conn_identity):
+        """Test deleting a identity domain successfully."""
+        mock_conn = mock_get_openstack_conn_identity
+        
+        # mock 
+        mock_domain = Mock()
+        mock_domain.id = "d01a81393377480cbd75c0210442e687"
+        mock_domain.name = "domainone"
+        mock_domain.description = "domainone description"
+        mock_domain.is_enabled = True
+        
+        mock_conn.identity.find_domain.return_value = mock_domain
+        
+        # Test delete_domain()
+        identity_tools = self.get_identity_tools()
+        result = identity_tools.delete_domain(name="domainone")
+
+        # Verify results
+        assert result is None
+        
+        # Verify mock calls
+        mock_conn.identity.find_domain.assert_called_once_with(name_or_id="domainone")
+        mock_conn.identity.delete_domain.assert_called_once_with(domain=mock_domain, ignore_missing=False)
+    
+        
+    def test_delete_domain_not_found(self, mock_get_openstack_conn_identity):
+        """Test deleting a identity domain that does not exist."""
+        mock_conn = mock_get_openstack_conn_identity
+        
+        # Create mock domain object
+        mock_domain = Mock()
+        mock_domain.id = "d01a81393377480cbd75c0210442e687"
+        mock_domain.name = "domainone"
+        mock_domain.description = "domainone description"
+        mock_domain.is_enabled = True
+        
+        mock_conn.identity.find_domain.return_value = mock_domain
+        
+        # Configure mock to raise NotFoundException
+        mock_conn.identity.delete_domain.side_effect = exceptions.NotFoundException(
+            "Domain 'domainone' not found",
+        )
+        
+        # Test delete_domain()
+        identity_tools = self.get_identity_tools()
+        
+        # Verify exception is raised
+        with pytest.raises(exceptions.NotFoundException, match="Domain 'domainone' not found"):
+            identity_tools.delete_domain(name="domainone")
+        
+        # Verify mock calls
+        mock_conn.identity.find_domain.assert_called_once_with(name_or_id="domainone")
+        mock_conn.identity.delete_domain.assert_called_once_with(domain=mock_domain, ignore_missing=False)
+    
+    def test_update_domain_with_all_fields_success(self, mock_get_openstack_conn_identity):
+        """Test updating a identity domain successfully."""
+        mock_conn = mock_get_openstack_conn_identity
+        
+        # Create mock domain object
+        mock_domain = Mock()
+        mock_domain.id = "d01a81393377480cbd75c0210442e687"
+        mock_domain.name = "domainone"
+        mock_domain.description = "domainone description"
+        mock_domain.is_enabled = True
+        
+        # Configure mock domain.find_domain() and update_domain()
+        mock_conn.identity.find_domain.return_value = mock_domain
+        mock_conn.identity.update_domain.return_value = mock_domain
+        
+        # Test update_domain()
+        identity_tools = self.get_identity_tools()
+        result = identity_tools.update_domain(name="domainone", description="domainone description", is_enabled=True)
+        
+        # Verify results
+        assert result == Domain(id="d01a81393377480cbd75c0210442e687", name="domainone", description="domainone description", is_enabled=True)
+        
+        # Verify mock calls
+        mock_conn.identity.find_domain.assert_called_once_with(name_or_id="domainone")
+        mock_conn.identity.update_domain.assert_called_once_with(domain=mock_domain, name="domainone", description="domainone description", is_enabled=True)
+        
+    
+    def test_update_domain_with_empty_args(self, mock_get_openstack_conn_identity):
+        """Test updating a identity domain with empty arguments."""
+        mock_conn = mock_get_openstack_conn_identity
+        
+        # Create mock domain object
+        mock_domain = Mock()
+        mock_domain.id = "d01a81393377480cbd75c0210442e687"
+        mock_domain.name = "domainone"
+        mock_domain.description = "domainone description"
+        mock_domain.is_enabled = True
+        
+        # Configure mock domain.find_domain() and update_domain()
+        mock_conn.identity.find_domain.return_value = mock_domain
+        mock_conn.identity.update_domain.return_value = mock_domain
+        
+        # Test update_domain()
+        identity_tools = self.get_identity_tools()
+        result = identity_tools.update_domain(name="domainone")
+        
+        # Verify results
+        assert result == Domain(id="d01a81393377480cbd75c0210442e687", name="domainone", description="domainone description", is_enabled=True)
+        
+        # Verify mock calls
+        mock_conn.identity.find_domain.assert_called_once_with(name_or_id="domainone")
+        mock_conn.identity.update_domain.assert_called_once_with(domain=mock_domain, name="domainone")
+    
+    def test_update_domain_with_empty_name(self, mock_get_openstack_conn_identity):
+        """Test updating a identity domain with an empty name."""
+        mock_conn = mock_get_openstack_conn_identity
+        
+        mock_conn.identity.find_domain.side_effect = exceptions.BadRequestException(
+            "Field required",
+        )
+        
+        # Test update_domain()
+        identity_tools = self.get_identity_tools()
+        
+        # Verify exception is raised
+        with pytest.raises(exceptions.BadRequestException, match="Field required"):
+            identity_tools.update_domain(name="")
+        
+        # Verify mock calls
+        mock_conn.identity.find_domain.assert_called_once_with(name_or_id="")
+    
+    
