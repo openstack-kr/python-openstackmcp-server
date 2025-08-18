@@ -5,7 +5,7 @@ description = "A MCP server providing OpenStack services for MCP clients"
 readme = "README.md"
 requires-python = ">=3.10"
 dependencies = [
-    "fastmcp>=2.11.0",
+    "fastmcp>=2.11.3",
     "openstacksdk>=4.6.0",
     "pydantic>=2.11.7",
 ]
@@ -71,7 +71,6 @@ select = [
     "S",
     "U",
     "I",
-    "COM812",
 ]
 ignore = [
     "C901",
