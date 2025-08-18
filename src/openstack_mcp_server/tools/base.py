@@ -1,5 +1,3 @@
-import atexit
-
 import openstack
 
 from openstack import connection
@@ -18,15 +16,7 @@ class OpenStackConnectionManager:
         if cls._connection is None:
             openstack.enable_logging(debug=config.MCP_DEBUG_MODE)
             cls._connection = openstack.connect(cloud=config.MCP_CLOUD_NAME)
-            atexit.register(cls._cleanup)
         return cls._connection
-
-    @classmethod
-    def _cleanup(cls) -> None:
-        """Cleanup method called at program exit"""
-        if cls._connection is not None:
-            cls._connection.close()
-            cls._connection = None
 
 
 _openstack_connection_manager = OpenStackConnectionManager()
