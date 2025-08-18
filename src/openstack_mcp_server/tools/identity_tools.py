@@ -56,12 +56,12 @@ class IdentityTools:
 
         return Region(id=region.id, description=region.description)
 
-    def create_region(self, id: str, description: str | None= None) -> Region:
+    def create_region(self, id: str, description: str | None = None) -> Region:
         """
         Create a new region.
 
         :param id: The ID of the region.
-        :param description: The description of the region. 
+        :param description: The description of the region.
 
         :return: The created Region object.
         """
@@ -150,7 +150,7 @@ class IdentityTools:
         self,
         name: str,
         description: str | None = None,
-        is_enabled: bool  | None = False,
+        is_enabled: bool | None = False,
     ) -> Domain:
         """
         Create a new domain.
