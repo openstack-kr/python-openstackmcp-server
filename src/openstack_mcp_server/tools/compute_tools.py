@@ -1,3 +1,4 @@
+from enum import Enum
 from typing import Any
 
 from fastmcp import FastMCP
@@ -8,6 +9,24 @@ from openstack_mcp_server.tools.response.compute import (
 )
 
 from .base import get_openstack_conn
+
+
+class ServerActionEnum(str, Enum):
+    """available actions without parameter for compute tools"""
+
+    PAUSE = "pause"
+    UNPAUSE = "unpause"
+    SUSPEND = "suspend"
+    RESUME = "resume"
+    LOCK = "lock"
+    UNLOCK = "unlock"
+    RESCUE = "rescue"
+    UNRESCUE = "unrescue"
+    START = "start"
+    STOP = "stop"
+    SHELVE = "shelve"
+    SHELVE_OFFLOAD = "shelve_offload"
+    UNSHELVE = "unshelve"
 
 
 class ComputeTools:
@@ -104,7 +123,7 @@ class ComputeTools:
             flavor_list.append(Flavor(**flavor))
         return flavor_list
 
-    def action_server(self, id: str, action: str) -> None:
+    def action_server(self, id: str, action: ServerActionEnum):
         """
         Perform an action on a Compute server.
 
@@ -125,25 +144,24 @@ class ComputeTools:
                       - shelve_offload: Shelf-offloads, or removes, a shelved server
                       - unshelve: Unshelves, or restores, a shelved server
                       Only above actions are currently supported
-        :return: None
         :raises ValueError: If the action is not supported or invalid(ConflictException).
         """
         conn = get_openstack_conn()
 
         action_methods = {
-            "pause": conn.compute.pause_server,
-            "unpause": conn.compute.unpause_server,
-            "suspend": conn.compute.suspend_server,
-            "resume": conn.compute.resume_server,
-            "lock": conn.compute.lock_server,
-            "unlock": conn.compute.unlock_server,
-            "rescue": conn.compute.rescue_server,
-            "unrescue": conn.compute.unrescue_server,
-            "start": conn.compute.start_server,
-            "stop": conn.compute.stop_server,
-            "shelve": conn.compute.shelve_server,
-            "shelve_offload": conn.compute.shelve_offload_server,
-            "unshelve": conn.compute.unshelve_server,
+            ServerActionEnum.PAUSE: conn.compute.pause_server,
+            ServerActionEnum.UNPAUSE: conn.compute.unpause_server,
+            ServerActionEnum.SUSPEND: conn.compute.suspend_server,
+            ServerActionEnum.RESUME: conn.compute.resume_server,
+            ServerActionEnum.LOCK: conn.compute.lock_server,
+            ServerActionEnum.UNLOCK: conn.compute.unlock_server,
+            ServerActionEnum.RESCUE: conn.compute.rescue_server,
+            ServerActionEnum.UNRESCUE: conn.compute.unrescue_server,
+            ServerActionEnum.START: conn.compute.start_server,
+            ServerActionEnum.STOP: conn.compute.stop_server,
+            ServerActionEnum.SHELVE: conn.compute.shelve_server,
+            ServerActionEnum.SHELVE_OFFLOAD: conn.compute.shelve_offload_server,
+            ServerActionEnum.UNSHELVE: conn.compute.unshelve_server,
         }
 
         if action not in action_methods:

@@ -388,7 +388,7 @@ class TestComputeTools:
         # Verify the correct method was called with server ID
         action_method.assert_called_once_with(server_id)
 
-    def test_action_server_unsupported_action(self):
+    def test_action_server_unsupported_action(self, mock_get_openstack_conn):
         """Test action_server with unsupported action raises ValueError."""
         server_id = "test-server-id"
         unsupported_action = "invalid_action"
