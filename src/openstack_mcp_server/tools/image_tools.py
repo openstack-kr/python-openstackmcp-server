@@ -16,26 +16,45 @@ class ImageTools:
         Register Image-related tools with the FastMCP instance.
         """
 
-        mcp.tool()(self.get_image_images)
+        mcp.tool()(self.get_images)
         mcp.tool()(self.create_image)
 
-    def get_image_images(self) -> str:
+    def get_images(
+        self,
+        name: str | None = None,
+        status: str | None = None,
+        visibility: str | None = None,
+    ) -> list[Image]:
         """
-        Get the list of Image images by invoking the registered tool.
+        Get the list of OpenStack images with optional filtering.
 
-        :return: A string containing the names, IDs, and statuses of the images.
+        Prompt:
+            See prompts/image_tools_prompt.md for detailed usage examples.
+
+        Args:
+            name: Filter by image name
+            status: Filter by status (e.g., 'active', 'queued', 'killed')
+            visibility: Filter by visibility (e.g., 'public', 'private', 'shared')
+
+        Returns:
+            A list of Image objects.
         """
-        # Initialize connection
         conn = get_openstack_conn()
 
-        # List the servers
-        image_list = []
-        for image in conn.image.images():
-            image_list.append(
-                f"{image.name} ({image.id}) - Status: {image.status}",
-            )
+        # Build filters for the image query
+        filters = {}
+        if name and name.strip():
+            filters["name"] = name.strip()
+        if status and status.strip():
+            filters["status"] = status.strip()
+        if visibility and visibility.strip():
+            filters["visibility"] = visibility.strip()
 
-        return "\n".join(image_list)
+        image_list = []
+        for image in conn.image.images(**filters):
+            image_list.append(Image(**image))
+
+        return image_list
 
     def create_image(self, image_data: CreateImage) -> Image:
         """Create a new Openstack image.

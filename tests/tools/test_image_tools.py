@@ -2,6 +2,8 @@ import uuid
 
 from unittest.mock import Mock
 
+import pytest
+
 from openstack_mcp_server.tools.image_tools import ImageTools
 from openstack_mcp_server.tools.request.image import CreateImage
 from openstack_mcp_server.tools.response.image import Image
@@ -46,80 +48,135 @@ class TestImageTools:
 
         return defaults
 
-    def test_get_image_images_success(self, mock_get_openstack_conn_image):
+    def test_get_images_success(self, mock_get_openstack_conn_image):
         """Test getting image images successfully."""
         mock_conn = mock_get_openstack_conn_image
 
-        # Create mock image objects
-        mock_image1 = Mock()
-        mock_image1.name = "ubuntu-20.04-server"
-        mock_image1.id = "img-123-abc-def"
-        mock_image1.status = "active"
+        mock_image1 = self.image_factory(
+            id="img-123-abc-def",
+            name="ubuntu-20.04-server",
+            status="active",
+            visibility="public",
+            checksum="abc123",
+            size=1073741824,
+        )
 
-        mock_image2 = Mock()
-        mock_image2.name = "centos-8-stream"
-        mock_image2.id = "img-456-ghi-jkl"
-        mock_image2.status = "active"
+        mock_image2 = self.image_factory(
+            id="img-456-ghi-jkl",
+            name="centos-8-stream",
+            status="active",
+            visibility="public",
+            checksum="def456",
+            size=2147483648,
+        )
 
-        # Configure mock image.images()
         mock_conn.image.images.return_value = [mock_image1, mock_image2]
 
-        # Test ImageTools
-        image_tools = ImageTools()
-        result = image_tools.get_image_images()
+        result = ImageTools().get_images()
 
-        # Verify results
-        expected_output = (
-            "ubuntu-20.04-server (img-123-abc-def) - Status: active\n"
-            "centos-8-stream (img-456-ghi-jkl) - Status: active"
-        )
+        expected_output = [
+            Image(**mock_image1),
+            Image(**mock_image2),
+        ]
         assert result == expected_output
 
-        # Verify mock calls
         mock_conn.image.images.assert_called_once()
 
-    def test_get_image_images_empty_list(self, mock_get_openstack_conn_image):
+    def test_get_images_empty_list(self, mock_get_openstack_conn_image):
         """Test getting image images when no images exist."""
         mock_conn = mock_get_openstack_conn_image
-
-        # Empty image list
         mock_conn.image.images.return_value = []
 
-        image_tools = ImageTools()
-        result = image_tools.get_image_images()
+        result = ImageTools().get_images()
 
-        # Verify empty string
-        assert result == ""
-
+        assert result == []
         mock_conn.image.images.assert_called_once()
 
-    def test_get_image_images_with_empty_name(
+    @pytest.mark.parametrize(
+        "filter_name,filter_value,expected_count",
+        [
+            ("name", "ubuntu-20.04-server", 1),  # exact name match
+            ("name", "ubuntu", 0),  # partial match not supported
+            ("name", "nonexistent", 0),  # non-existent name
+            ("name", "", 2),  # empty filter value
+            ("name", "   ", 2),  # whitespace only
+            ("status", "active", 2),
+            ("visibility", "public", 2),
+            ("status", "deleted", 0),
+            ("visibility", "private", 0),
+        ],
+    )
+    def test_get_images_with_filters(
         self,
         mock_get_openstack_conn_image,
+        filter_name,
+        filter_value,
+        expected_count,
     ):
-        """Test images with empty or None names."""
+        """Test getting images with various filters."""
         mock_conn = mock_get_openstack_conn_image
 
-        # Images with empty name (edge case)
-        mock_image1 = Mock()
-        mock_image1.name = "normal-image"
-        mock_image1.id = "img-normal"
-        mock_image1.status = "active"
+        mock_image1 = self.image_factory(
+            id="img-123-abc-def",
+            name="ubuntu-20.04-server",
+            status="active",
+            visibility="public",
+            checksum="abc123",
+            size=1073741824,
+        )
 
-        mock_image2 = Mock()
-        mock_image2.name = ""  # Empty name
-        mock_image2.id = "img-empty-name"
-        mock_image2.status = "active"
+        mock_image2 = self.image_factory(
+            id="img-456-ghi-jkl",
+            name="centos-8-stream",
+            status="active",
+            visibility="public",
+            checksum="def456",
+            size=2147483648,
+        )
 
-        mock_conn.image.images.return_value = [mock_image1, mock_image2]
+        if filter_name == "name":
+            if filter_value == "ubuntu-20.04-server":
+                mock_conn.image.images.return_value = [mock_image1]
+            elif filter_value in ["", "   "]:
+                mock_conn.image.images.return_value = [
+                    mock_image1,
+                    mock_image2,
+                ]
+            else:
+                mock_conn.image.images.return_value = []
+        elif filter_name == "status":
+            if filter_value == "active":
+                mock_conn.image.images.return_value = [
+                    mock_image1,
+                    mock_image2,
+                ]
+            else:
+                mock_conn.image.images.return_value = []
+        elif filter_name == "visibility":
+            if filter_value == "public":
+                mock_conn.image.images.return_value = [
+                    mock_image1,
+                    mock_image2,
+                ]
+            else:
+                mock_conn.image.images.return_value = []
 
-        image_tools = ImageTools()
-        result = image_tools.get_image_images()
+        result = ImageTools().get_images(**{filter_name: filter_value})
 
-        assert "normal-image (img-normal) - Status: active" in result
-        assert " (img-empty-name) - Status: active" in result  # Empty name
+        if expected_count == 0:
+            assert result == []
+        elif expected_count == 1:
+            assert result == [Image(**mock_image1)]
+        else:
+            assert result == [Image(**mock_image1), Image(**mock_image2)]
 
-        mock_conn.image.images.assert_called_once()
+        # For empty/whitespace filters, no filter should be applied
+        if filter_value in ["", "   "]:
+            mock_conn.image.images.assert_called_once_with()
+        else:
+            mock_conn.image.images.assert_called_once_with(
+                **{filter_name: filter_value}
+            )
 
     def test_create_image_success_with_volume_id(
         self,
