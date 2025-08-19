@@ -43,6 +43,8 @@ class ComputeTools:
         mcp.tool()(self.create_server)
         mcp.tool()(self.get_flavors)
         mcp.tool()(self.action_server)
+        mcp.tool()(self.update_server)
+        mcp.tool()(self.delete_server)
 
     def get_servers(self) -> list[Server]:
         """
@@ -123,7 +125,7 @@ class ComputeTools:
             flavor_list.append(Flavor(**flavor))
         return flavor_list
 
-    def action_server(self, id: str, action: ServerActionEnum):
+    def action_server(self, id: str, action: ServerActionEnum) -> None:
         """
         Perform an action on a Compute server.
 
@@ -169,3 +171,46 @@ class ComputeTools:
 
         action_methods[action](id)
         return None
+
+    def update_server(
+        self,
+        id: str,
+        accessIPv4: str | None = None,
+        accessIPv6: str | None = None,
+        name: str | None = None,
+        hostname: str | None = None,
+        description: str | None = None,
+    ) -> Server:
+        """
+        Update a Compute server's name, hostname, or description.
+
+        :param id: The UUID of the server.
+        :param accessIPv4: (Optional) IPv4 address that should be used to access this server.
+        :param accessIPv6: (Optional) IPv6 address that should be used to access this server.
+        :param name: (Optional) The server name.
+        :param hostname: (Optional) The hostname to configure for the instance in the metadata service.
+        :param description: (Optional) A free form description of the server.
+        :return: The updated Server object.
+        """
+        conn = get_openstack_conn()
+        server_params = {
+            "accessIPv4": accessIPv4,
+            "accessIPv6": accessIPv6,
+            "name": name,
+            "hostname": hostname,
+            "description": description,
+        }
+        server_params = {
+            k: v for k, v in server_params.items() if v is not None
+        }
+        server = conn.compute.update_server(id, **server_params)
+        return Server(**server)
+
+    def delete_server(self, id: str) -> None:
+        """
+        Delete a Compute server.
+
+        :param id: The UUID of the server.
+        """
+        conn = get_openstack_conn()
+        conn.compute.delete_server(id)

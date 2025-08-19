@@ -25,12 +25,16 @@ class Server(BaseModel):
 
     id: str
     name: str
+    hostname: str | None = None
+    description: str | None = None
     status: str | None = None
     flavor: Flavor | None = None
     image: Image | None = None
     addresses: dict[str, list[IPAddress]] | None = None
     key_name: str | None = None
     security_groups: list[SecurityGroup] | None = None
+    accessIPv4: str | None = None
+    accessIPv6: str | None = None
 
 
 class Flavor(BaseModel):

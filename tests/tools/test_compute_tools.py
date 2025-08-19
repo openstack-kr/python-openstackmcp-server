@@ -266,9 +266,11 @@ class TestComputeTools:
                 call(compute_tools.create_server),
                 call(compute_tools.get_flavors),
                 call(compute_tools.action_server),
+                call(compute_tools.update_server),
+                call(compute_tools.delete_server),
             ],
         )
-        assert mock_tool_decorator.call_count == 5
+        assert mock_tool_decorator.call_count == 7
 
     def test_compute_tools_instantiation(self):
         """Test ComputeTools can be instantiated."""
@@ -432,3 +434,124 @@ class TestComputeTools:
             compute_tools.action_server(server_id, action)
 
         mock_conn.compute.start_server.assert_called_once_with(server_id)
+
+    def test_update_server_success(self, mock_get_openstack_conn):
+        """Test updating a server successfully with all parameters."""
+        mock_conn = mock_get_openstack_conn
+        server_id = "test-server-id"
+
+        mock_server = {
+            "name": "updated-server",
+            "id": server_id,
+            "status": "ACTIVE",
+            "hostname": "updated-hostname",
+            "description": "Updated server description",
+            "accessIPv4": "192.168.1.100",
+            "accessIPv6": "2001:db8::1",
+        }
+
+        mock_conn.compute.update_server.return_value = mock_server
+
+        compute_tools = ComputeTools()
+        server_params = mock_server.copy()
+        server_params.pop("status")
+        result = compute_tools.update_server(**server_params)
+
+        expected_output = Server(**mock_server)
+        assert result == expected_output
+
+        expected_params = {
+            "accessIPv4": "192.168.1.100",
+            "accessIPv6": "2001:db8::1",
+            "name": "updated-server",
+            "hostname": "updated-hostname",
+            "description": "Updated server description",
+        }
+        mock_conn.compute.update_server.assert_called_once_with(
+            server_id, **expected_params
+        )
+
+    @pytest.mark.parametrize(
+        "params",
+        [
+            {"param_key": "name", "value": "new-name"},
+            {"param_key": "hostname", "value": "new-hostname"},
+            {"param_key": "description", "value": "New description"},
+            {"param_key": "accessIPv4", "value": "192.168.1.100"},
+            {"param_key": "accessIPv6", "value": "2001:db8::1"},
+        ],
+    )
+    def test_update_server_optional_params(
+        self, mock_get_openstack_conn, params
+    ):
+        """Test updating a server with optional parameters."""
+        mock_conn = mock_get_openstack_conn
+        server_id = "test-server-id"
+
+        mock_server = {
+            "id": server_id,
+            "name": "original-name",
+            "description": "Original description",
+            "hostname": "original-hostname",
+            "accessIPv4": "1.1.1.1",
+            "accessIPv6": "::",
+            "status": "ACTIVE",
+            **{params["param_key"]: params["value"]},
+        }
+
+        mock_conn.compute.update_server.return_value = mock_server
+
+        compute_tools = ComputeTools()
+        result = compute_tools.update_server(
+            id=server_id,
+            **{params["param_key"]: params["value"]},
+        )
+        assert result == Server(**mock_server)
+
+        expected_params = {params["param_key"]: params["value"]}
+        mock_conn.compute.update_server.assert_called_once_with(
+            server_id, **expected_params
+        )
+
+    def test_update_server_not_found(self, mock_get_openstack_conn):
+        """Test updating a server that does not exist."""
+        mock_conn = mock_get_openstack_conn
+        server_id = "non-existent-server-id"
+
+        # Mock the update_server method to raise NotFoundException
+        mock_conn.compute.update_server.side_effect = NotFoundException()
+
+        compute_tools = ComputeTools()
+
+        with pytest.raises(NotFoundException):
+            compute_tools.update_server(id=server_id)
+
+        mock_conn.compute.update_server.assert_called_once_with(server_id)
+
+    def test_delete_server_success(self, mock_get_openstack_conn):
+        """Test deleting a server successfully."""
+        mock_conn = mock_get_openstack_conn
+        server_id = "test-server-id"
+
+        mock_conn.compute.delete_server.return_value = None
+
+        compute_tools = ComputeTools()
+        result = compute_tools.delete_server(server_id)
+
+        assert result is None
+        mock_conn.compute.delete_server.assert_called_once_with(server_id)
+
+    def test_delete_server_not_found(self, mock_get_openstack_conn):
+        """Test deleting a server that does not exist."""
+        mock_conn = mock_get_openstack_conn
+        server_id = "non-existent-server-id"
+
+        # Mock the delete_server method to raise NotFoundException
+        mock_conn.compute.delete_server.side_effect = NotFoundException()
+
+        compute_tools = ComputeTools()
+
+        with pytest.raises(NotFoundException):
+            compute_tools.delete_server(server_id)
+
+        mock_conn.compute.delete_server.assert_called_once_with(server_id)
