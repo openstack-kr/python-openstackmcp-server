@@ -197,8 +197,8 @@ class NetworkTools:
             name=openstack_network.name or "",
             status=openstack_network.status or "",
             description=openstack_network.description or None,
-            is_admin_state_up=openstack_network.admin_state_up or False,
-            is_shared=openstack_network.shared or False,
+            is_admin_state_up=openstack_network.is_admin_state_up or False,
+            is_shared=openstack_network.is_shared or False,
             mtu=openstack_network.mtu or None,
             provider_network_type=openstack_network.provider_network_type
             or None,
