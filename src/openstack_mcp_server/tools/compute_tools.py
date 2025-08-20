@@ -185,11 +185,11 @@ class ComputeTools:
         Update a Compute server's name, hostname, or description.
 
         :param id: The UUID of the server.
-        :param accessIPv4: (Optional) IPv4 address that should be used to access this server.
-        :param accessIPv6: (Optional) IPv6 address that should be used to access this server.
-        :param name: (Optional) The server name.
-        :param hostname: (Optional) The hostname to configure for the instance in the metadata service.
-        :param description: (Optional) A free form description of the server.
+        :param accessIPv4: IPv4 address that should be used to access this server.
+        :param accessIPv6: IPv6 address that should be used to access this server.
+        :param name: The server name.
+        :param hostname: The hostname to configure for the instance in the metadata service.
+        :param description: A free form description of the server.
         :return: The updated Server object.
         """
         conn = get_openstack_conn()
