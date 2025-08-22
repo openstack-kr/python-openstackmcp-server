@@ -21,7 +21,7 @@ flowchart LR
 
 # Features
 - **MCP Protocol Support**: Implements the Model Context Protocol for AI assistants.
-- **Compute Tools**: Manage OpenStack compute resources (servers, flavors)."
+- **Compute Tools**: Manage OpenStack compute resources (servers, flavors).
 - **Image Tools**: Manage OpenStack images.
 - **Identity Tools**: Handle OpenStack identity and authentication.
 - **Network Tools**: Manage OpenStack networking resources.
