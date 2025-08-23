@@ -1104,7 +1104,7 @@ class TestNetworkTools:
         assert res1.gateway_ip == "10.0.0.254"
 
         updated.gateway_ip = None
-        res2 = tools.update_subnet("subnet-1", gateway_ip=None)
+        res2 = tools.update_subnet("subnet-1", clear_gateway=True)
         assert res2.gateway_ip is None
 
     def test_set_and_toggle_subnet_dhcp(
@@ -1238,7 +1238,7 @@ class TestNetworkTools:
         assert attached.port_id == "port-1"
 
         updated.port_id = None
-        detached = tools.update_floating_ip("fip-1", port_id=None)
+        detached = tools.update_floating_ip("fip-1", clear_port=True)
         assert detached.port_id is None
 
         mock_conn.network.get_ip.return_value = updated

@@ -9,9 +9,6 @@ from .response.network import (
 )
 
 
-_UNSET = object()
-
-
 class NetworkTools:
     """
     A class to encapsulate Network-related tools and utilities.
@@ -188,7 +185,6 @@ class NetworkTools:
         Convert an OpenStack network object to a Network pydantic model.
 
         :param openstack_network: OpenStack network object
-        :type openstack_network: Any
         :return: Pydantic Network model
         """
         return Network(
@@ -219,11 +215,24 @@ class NetworkTools:
         """
         Get the list of Subnets with optional filtering.
 
+        Use this to narrow results by network, project, IP version, gateway presence, and
+        DHCP-enabled state.
+
+        Notes:
+        - has_gateway is applied client-side after retrieval and checks whether `gateway_ip` is set.
+        - `is_dhcp_enabled` maps to Neutron's `enable_dhcp` filter.
+        - Combining filters further restricts the result (logical AND).
+
+        Examples:
+        - All IPv4 subnets in a network: `network_id="net-1"`, `ip_version=4`
+        - Only subnets with a gateway: `has_gateway=True`
+        - DHCP-enabled subnets for a project: `project_id="proj-1"`, `is_dhcp_enabled=True`
+
         :param network_id: Filter by network ID
         :param ip_version: Filter by IP version (e.g., 4, 6)
         :param project_id: Filter by project ID
-        :param has_gateway: Filter by whether a gateway is set
-        :param is_dhcp_enabled: Filter by DHCP enabled state
+        :param has_gateway: True for subnets with a gateway, False for no gateway
+        :param is_dhcp_enabled: True for DHCP-enabled subnets, False for disabled
         :return: List of Subnet objects
         """
         conn = get_openstack_conn()
@@ -309,7 +318,8 @@ class NetworkTools:
         subnet_id: str,
         name: str | None = None,
         description: str | None = None,
-        gateway_ip: str | None | object = _UNSET,
+        gateway_ip: str | None = None,
+        clear_gateway: bool = False,
         is_dhcp_enabled: bool | None = None,
         dns_nameservers: list[str] | None = None,
         allocation_pools: list[dict] | None = None,
@@ -320,24 +330,32 @@ class NetworkTools:
         parameters remain untouched.
 
         Typical use-cases:
-        - Set gateway: pass gateway_ip="10.0.0.1".
-        - Clear gateway: pass gateway_ip=None.
-        - Enable/disable DHCP: pass is_dhcp_enabled=True or False.
-        - Batch updates: change name/description and DNS nameservers together.
+        - Set gateway: `gateway_ip="10.0.0.1"`.
+        - Clear gateway: `clear_gateway=True`.
+        - Enable/disable DHCP: `is_dhcp_enabled=True or False`.
+        - Batch updates: update name/description and DNS nameservers together.
 
         Notes:
-        - OpenStack Neutron supports partial updates. Passing None for gateway_ip clears the gateway.
-        - To emulate a DHCP toggle, read current state and invert it, then call this method with
-          is_dhcp_enabled set accordingly.
+        - `clear_gateway=True` explicitly clears `gateway_ip` (sets to None). If both `gateway_ip`
+          and `clear_gateway=True` are provided, `clear_gateway` takes precedence.
+        - For list-typed fields (`dns_nameservers`, `allocation_pools`, `host_routes`), the provided
+          list replaces the entire list on the server. Pass `[]` to remove all entries.
+        - For a DHCP toggle, read the current value via `get_subnet_detail()` and pass the inverted
+          boolean to `is_dhcp_enabled`.
+
+        Examples:
+        - Clear the gateway and disable DHCP: `clear_gateway=True`, `is_dhcp_enabled=False`
+        - Replace DNS servers: `dns_nameservers=["8.8.8.8", "1.1.1.1"]`
 
         :param subnet_id: ID of the subnet to update
         :param name: New subnet name
         :param description: New subnet description
         :param gateway_ip: New gateway IP
+        :param clear_gateway: If True, clear the gateway IP (sets to None)
         :param is_dhcp_enabled: DHCP enabled state
-        :param dns_nameservers: DNS nameserver list
-        :param allocation_pools: Allocation pool list
-        :param host_routes: Static host routes
+        :param dns_nameservers: DNS nameserver list (replaces entire list)
+        :param allocation_pools: Allocation pool list (replaces entire list)
+        :param host_routes: Static host routes (replaces entire list)
         :return: Updated Subnet object
         """
         conn = get_openstack_conn()
@@ -346,7 +364,9 @@ class NetworkTools:
             update_args["name"] = name
         if description is not None:
             update_args["description"] = description
-        if gateway_ip is not _UNSET:
+        if clear_gateway:
+            update_args["gateway_ip"] = None
+        elif gateway_ip is not None:
             update_args["gateway_ip"] = gateway_ip
         if is_dhcp_enabled is not None:
             update_args["enable_dhcp"] = is_dhcp_enabled
@@ -531,7 +551,7 @@ class NetworkTools:
 
         Typical use-cases:
         - Set admin state down: is_admin_state_up=False
-        - Toggle admin state: read current via get_port_detail() then pass the inverted value
+        - Toggle admin state: read current via get_port_detail(); pass inverted value
         - Replace security groups: security_group_ids=["sg-1", "sg-2"]
         - Replace allowed address pairs:
           1) current = get_port_allowed_address_pairs(port_id)
@@ -543,8 +563,14 @@ class NetworkTools:
           3) update_port(port_id, fixed_ips=current)
 
         Notes:
-        - For list-typed fields like security groups or allowed address pairs, this method replaces
-          the entire list with the provided value. To remove all entries, pass an empty list [].
+        - List-typed fields (security groups, allowed address pairs, fixed IPs) replace the entire list
+          with the provided value. Pass [] to remove all entries.
+        - For fixed IPs, each dict typically includes keys like "subnet_id" and/or "ip_address".
+
+        Examples:
+        - Add a fixed IP: read current, append a new {"subnet_id": "subnet-2", "ip_address": "10.0.1.10"},
+          then pass fixed_ips=[...]
+        - Clear all security groups: security_group_ids=[]
 
         :param port_id: ID of the port to update
         :param name: New port name
@@ -657,11 +683,16 @@ class NetworkTools:
         """
         Create a new Floating IP.
 
+        Typical use-cases:
+        - Allocate in a pool and attach immediately: provide port_id (and optionally fixed_ip_address).
+        - Allocate for later use: omit port_id (unassigned state).
+        - Add metadata: provide description.
+
         :param floating_network_id: External (floating) network ID
-        :param description: Floating IP description
-        :param fixed_ip_address: Internal fixed IP to map
-        :param port_id: Port ID to attach
-        :param project_id: Project ID
+        :param description: Floating IP description (omit to keep empty)
+        :param fixed_ip_address: Internal fixed IP to map when attaching to a port
+        :param port_id: Port ID to attach (omit for unassigned allocation)
+        :param project_id: Project ID to assign ownership
         :return: Created FloatingIP object
         """
         conn = get_openstack_conn()
@@ -701,9 +732,10 @@ class NetworkTools:
     def update_floating_ip(
         self,
         floating_ip_id: str,
-        description: str | None | object = _UNSET,
-        port_id: str | None | object = _UNSET,
-        fixed_ip_address: str | None | object = _UNSET,
+        description: str | None = None,
+        port_id: str | None = None,
+        fixed_ip_address: str | None = None,
+        clear_port: bool = False,
     ) -> FloatingIP:
         """
         Update Floating IP attributes. Only provided parameters are changed; omitted
@@ -711,29 +743,35 @@ class NetworkTools:
 
         Typical use-cases:
         - Attach to a port: port_id="port-1" (optionally fixed_ip_address="10.0.0.10").
-        - Detach from its port: port_id=None.
+        - Detach from its port: clear_port=True and omit port_id (sets port_id=None).
+        - Keep current port: clear_port=False and omit port_id.
         - Update description: description="new desc" or clear with description=None.
         - Reassign to another port: port_id="new-port" (optionally with fixed_ip_address).
 
         Notes:
         - Passing None for description clears it.
-        - Passing None for port_id detaches the address from any port.
+        - clear_port controls whether to detach when no port_id is provided.
         - fixed_ip_address is optional and can be provided alongside port_id.
 
         :param floating_ip_id: Floating IP ID to update
-        :param description: New description or None to clear
-        :param port_id: Port ID to attach; None to detach; omit to keep unchanged
-        :param fixed_ip_address: Specific fixed IP to map; omit to keep unchanged
+        :param description: New description (omit to keep unchanged, None to clear)
+        :param port_id: Port ID to attach; omit to keep or detach depending on clear_port
+        :param clear_port: If True and port_id is omitted, detach (set port_id=None); if False and
+                           port_id is omitted, keep current attachment
+        :param fixed_ip_address: Specific fixed IP to map when attaching
         :return: Updated FloatingIP object
         """
         conn = get_openstack_conn()
         update_args: dict = {}
-        if description is not _UNSET:
+        if description is not None:
             update_args["description"] = description
-        if port_id is not _UNSET:
+        if port_id is not None:
             update_args["port_id"] = port_id
-        if fixed_ip_address is not _UNSET:
-            update_args["fixed_ip_address"] = fixed_ip_address
+            if fixed_ip_address is not None:
+                update_args["fixed_ip_address"] = fixed_ip_address
+        else:
+            if clear_port:
+                update_args["port_id"] = None
         if not update_args:
             current = conn.network.get_ip(floating_ip_id)
             return self._convert_to_floating_ip_model(current)
