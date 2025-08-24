@@ -28,16 +28,14 @@ class ImageTools:
         """
         Get the list of OpenStack images with optional filtering.
 
-        Prompt:
-            See prompts/image_tools_prompt.md for detailed usage examples.
+        The filtering behavior is as follows:
+        - By default, all available images are returned without any filtering applied. 
+        - Filters are only applied when specific values are provided by the user.
 
-        Args:
-            name: Filter by image name
-            status: Filter by status (e.g., 'active', 'queued', 'killed')
-            visibility: Filter by visibility (e.g., 'public', 'private', 'shared')
-
-        Returns:
-            A list of Image objects.
+        :param name: Filter by image name
+        :param status: Filter by status
+        :param visibility: Filter by visibility
+        :return: A list of Image objects.
         """
         conn = get_openstack_conn()
 
