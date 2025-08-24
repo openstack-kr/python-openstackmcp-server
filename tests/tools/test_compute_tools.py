@@ -268,9 +268,11 @@ class TestComputeTools:
                 call(compute_tools.action_server),
                 call(compute_tools.update_server),
                 call(compute_tools.delete_server),
+                call(compute_tools.attach_volume),
+                call(compute_tools.detach_volume),
             ],
         )
-        assert mock_tool_decorator.call_count == 7
+        assert mock_tool_decorator.call_count == 9
 
     def test_compute_tools_instantiation(self):
         """Test ComputeTools can be instantiated."""
@@ -555,3 +557,90 @@ class TestComputeTools:
             compute_tools.delete_server(server_id)
 
         mock_conn.compute.delete_server.assert_called_once_with(server_id)
+
+    def test_attach_volume_success(self, mock_get_openstack_conn):
+        """Test attaching a volume to a server successfully."""
+        mock_conn = mock_get_openstack_conn
+        server_id = "test-server-id"
+        volume_id = "test-volume-id"
+
+        mock_conn.compute.create_volume_attachment.return_value = None
+
+        compute_tools = ComputeTools()
+        result = compute_tools.attach_volume(server_id, volume_id)
+
+        assert result is None
+        mock_conn.compute.create_volume_attachment.assert_called_once_with(
+            server_id, volume_id=volume_id, device=None
+        )
+
+    def test_attach_volume_with_device(self, mock_get_openstack_conn):
+        """Test attaching a volume to a server with a specific device."""
+        mock_conn = mock_get_openstack_conn
+        server_id = "test-server-id"
+        volume_id = "test-volume-id"
+        device = "/dev/vdb"
+
+        mock_conn.compute.create_volume_attachment.return_value = None
+
+        compute_tools = ComputeTools()
+        result = compute_tools.attach_volume(server_id, volume_id, device)
+
+        assert result is None
+        mock_conn.compute.create_volume_attachment.assert_called_once_with(
+            server_id, volume_id=volume_id, device=device
+        )
+
+    def test_attach_volume_exception(self, mock_get_openstack_conn):
+        """Test attaching a volume when exception occurs."""
+        mock_conn = mock_get_openstack_conn
+        server_id = "test-server-id"
+        volume_id = "test-volume-id"
+
+        mock_conn.compute.create_volume_attachment.side_effect = (
+            NotFoundException()
+        )
+
+        compute_tools = ComputeTools()
+
+        with pytest.raises(NotFoundException):
+            compute_tools.attach_volume(server_id, volume_id)
+
+        mock_conn.compute.create_volume_attachment.assert_called_once_with(
+            server_id, volume_id=volume_id, device=None
+        )
+
+    def test_detach_volume_success(self, mock_get_openstack_conn):
+        """Test detaching a volume from a server successfully."""
+        mock_conn = mock_get_openstack_conn
+        server_id = "test-server-id"
+        volume_id = "test-volume-id"
+
+        mock_conn.compute.delete_volume_attachment.return_value = None
+
+        compute_tools = ComputeTools()
+        result = compute_tools.detach_volume(server_id, volume_id)
+
+        assert result is None
+        mock_conn.compute.delete_volume_attachment.assert_called_once_with(
+            server_id, volume_id
+        )
+
+    def test_detach_volume_exception(self, mock_get_openstack_conn):
+        """Test detaching a volume when exception occurs."""
+        mock_conn = mock_get_openstack_conn
+        server_id = "test-server-id"
+        volume_id = "test-volume-id"
+
+        mock_conn.compute.delete_volume_attachment.side_effect = (
+            NotFoundException()
+        )
+
+        compute_tools = ComputeTools()
+
+        with pytest.raises(NotFoundException):
+            compute_tools.detach_volume(server_id, volume_id)
+
+        mock_conn.compute.delete_volume_attachment.assert_called_once_with(
+            server_id, volume_id
+        )
