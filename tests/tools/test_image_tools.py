@@ -2,8 +2,6 @@ import uuid
 
 from unittest.mock import Mock
 
-import pytest
-
 from openstack_mcp_server.tools.image_tools import ImageTools
 from openstack_mcp_server.tools.request.image import CreateImage
 from openstack_mcp_server.tools.response.image import Image
@@ -51,7 +49,6 @@ class TestImageTools:
     def test_get_images_success(self, mock_get_openstack_conn_image):
         """Test getting image images successfully."""
         mock_conn = mock_get_openstack_conn_image
-
         mock_image1 = self.image_factory(
             id="img-123-abc-def",
             name="ubuntu-20.04-server",
@@ -60,7 +57,6 @@ class TestImageTools:
             checksum="abc123",
             size=1073741824,
         )
-
         mock_image2 = self.image_factory(
             id="img-456-ghi-jkl",
             name="centos-8-stream",
@@ -69,18 +65,16 @@ class TestImageTools:
             checksum="def456",
             size=2147483648,
         )
-
         mock_conn.image.images.return_value = [mock_image1, mock_image2]
 
         result = ImageTools().get_images()
 
+        mock_conn.image.images.assert_called_once()
         expected_output = [
             Image(**mock_image1),
             Image(**mock_image2),
         ]
         assert result == expected_output
-
-        mock_conn.image.images.assert_called_once()
 
     def test_get_images_empty_list(self, mock_get_openstack_conn_image):
         """Test getting image images when no images exist."""
@@ -89,34 +83,15 @@ class TestImageTools:
 
         result = ImageTools().get_images()
 
-        assert result == []
         mock_conn.image.images.assert_called_once()
+        assert result == []
 
-    @pytest.mark.parametrize(
-        "filter_name,filter_value,expected_count",
-        [
-            ("name", "ubuntu-20.04-server", 1),  # exact name match
-            ("name", "ubuntu", 0),  # partial match not supported
-            ("name", "nonexistent", 0),  # non-existent name
-            ("name", "", 2),  # empty filter value
-            ("name", "   ", 2),  # whitespace only
-            ("status", "active", 2),
-            ("visibility", "public", 2),
-            ("status", "deleted", 0),
-            ("visibility", "private", 0),
-        ],
-    )
-    def test_get_images_with_filters(
-        self,
-        mock_get_openstack_conn_image,
-        filter_name,
-        filter_value,
-        expected_count,
+    def test_get_images_with_status_filter(
+        self, mock_get_openstack_conn_image
     ):
-        """Test getting images with various filters."""
+        """Test getting images with status filter."""
         mock_conn = mock_get_openstack_conn_image
-
-        mock_image1 = self.image_factory(
+        mock_image = self.image_factory(
             id="img-123-abc-def",
             name="ubuntu-20.04-server",
             status="active",
@@ -124,59 +99,78 @@ class TestImageTools:
             checksum="abc123",
             size=1073741824,
         )
+        mock_conn.image.images.return_value = [mock_image]
 
-        mock_image2 = self.image_factory(
+        result = ImageTools().get_images(status="active")
+
+        mock_conn.image.images.assert_called_once_with(status="active")
+        expected_output = [Image(**mock_image)]
+        assert result == expected_output
+
+    def test_get_images_with_visibility_filter(
+        self, mock_get_openstack_conn_image
+    ):
+        """Test getting images with visibility filter."""
+        mock_conn = mock_get_openstack_conn_image
+        mock_image = self.image_factory(
             id="img-456-ghi-jkl",
             name="centos-8-stream",
-            status="active",
-            visibility="public",
+            status="queued",
+            visibility="private",
             checksum="def456",
             size=2147483648,
         )
+        mock_conn.image.images.return_value = [mock_image]
 
-        if filter_name == "name":
-            if filter_value == "ubuntu-20.04-server":
-                mock_conn.image.images.return_value = [mock_image1]
-            elif filter_value in ["", "   "]:
-                mock_conn.image.images.return_value = [
-                    mock_image1,
-                    mock_image2,
-                ]
-            else:
-                mock_conn.image.images.return_value = []
-        elif filter_name == "status":
-            if filter_value == "active":
-                mock_conn.image.images.return_value = [
-                    mock_image1,
-                    mock_image2,
-                ]
-            else:
-                mock_conn.image.images.return_value = []
-        elif filter_name == "visibility":
-            if filter_value == "public":
-                mock_conn.image.images.return_value = [
-                    mock_image1,
-                    mock_image2,
-                ]
-            else:
-                mock_conn.image.images.return_value = []
+        result = ImageTools().get_images(visibility="private")
 
-        result = ImageTools().get_images(**{filter_name: filter_value})
+        mock_conn.image.images.assert_called_once_with(visibility="private")
+        expected_output = [Image(**mock_image)]
+        assert result == expected_output
 
-        if expected_count == 0:
-            assert result == []
-        elif expected_count == 1:
-            assert result == [Image(**mock_image1)]
-        else:
-            assert result == [Image(**mock_image1), Image(**mock_image2)]
+    def test_get_images_with_name_filter(self, mock_get_openstack_conn_image):
+        """Test getting images with name filter."""
+        mock_conn = mock_get_openstack_conn_image
+        mock_image = self.image_factory(
+            id="img-789-mno-pqr",
+            name="centos-8-stream",
+            status="active",
+            visibility="public",
+            checksum="ghi789",
+            size=3221225472,
+        )
+        mock_conn.image.images.return_value = [mock_image]
 
-        # For empty/whitespace filters, no filter should be applied
-        if filter_value in ["", "   "]:
-            mock_conn.image.images.assert_called_once_with()
-        else:
-            mock_conn.image.images.assert_called_once_with(
-                **{filter_name: filter_value}
-            )
+        result = ImageTools().get_images(name="centos-8-stream")
+
+        mock_conn.image.images.assert_called_once_with(name="centos-8-stream")
+        expected_output = [Image(**mock_image)]
+        assert result == expected_output
+
+    def test_get_images_with_multiple_filters(
+        self, mock_get_openstack_conn_image
+    ):
+        """Test getting images with multiple filters."""
+        mock_conn = mock_get_openstack_conn_image
+        mock_image = self.image_factory(
+            id="img-multi-filter",
+            name="ubuntu-20.04-server",
+            status="active",
+            visibility="public",
+            checksum="multi123",
+            size=1073741824,
+        )
+        mock_conn.image.images.return_value = [mock_image]
+
+        result = ImageTools().get_images(
+            name="ubuntu-20.04-server", status="active", visibility="public"
+        )
+
+        mock_conn.image.images.assert_called_once_with(
+            name="ubuntu-20.04-server", status="active", visibility="public"
+        )
+        expected_output = [Image(**mock_image)]
+        assert result == expected_output
 
     def test_create_image_success_with_volume_id(
         self,

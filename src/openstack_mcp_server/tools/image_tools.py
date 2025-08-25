@@ -29,7 +29,7 @@ class ImageTools:
         Get the list of OpenStack images with optional filtering.
 
         The filtering behavior is as follows:
-        - By default, all available images are returned without any filtering applied. 
+        - By default, all available images are returned without any filtering applied.
         - Filters are only applied when specific values are provided by the user.
 
         :param name: Filter by image name
