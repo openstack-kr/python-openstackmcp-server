@@ -25,7 +25,7 @@ class IdentityTools:
         mcp.tool()(self.create_domain)
         mcp.tool()(self.delete_domain)
         mcp.tool()(self.update_domain)
-        
+
         mcp.tool()(self.get_projects)
         mcp.tool()(self.get_project)
 
@@ -231,7 +231,7 @@ class IdentityTools:
         :return: A list of Project objects representing the projects.
         """
         conn = get_openstack_conn()
-        
+
         project_list = []
         for project in conn.identity.projects():
             project_list.append(
@@ -246,7 +246,7 @@ class IdentityTools:
             )
 
         return project_list
-    
+
     def get_project(self, name: str) -> Project:
         """
         Get a project.
@@ -257,7 +257,9 @@ class IdentityTools:
         """
         conn = get_openstack_conn()
 
-        project = conn.identity.find_project(name_or_id=name, ignore_missing=False)
+        project = conn.identity.find_project(
+            name_or_id=name, ignore_missing=False
+        )
 
         return Project(
             id=project.id,
@@ -267,4 +269,3 @@ class IdentityTools:
             domain_id=project.domain_id,
             parent_id=project.parent_id,
         )
-    

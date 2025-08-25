@@ -14,6 +14,7 @@ class Domain(BaseModel):
     description: str | None = None
     is_enabled: bool | None = None
 
+
 class Project(BaseModel):
     id: str
     name: str
