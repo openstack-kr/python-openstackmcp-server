@@ -8,8 +8,8 @@ from openstack import exceptions
 from openstack_mcp_server.tools.identity_tools import IdentityTools
 from openstack_mcp_server.tools.response.identity import (
     Domain,
-    Region,
     Project,
+    Region,
 )
 
 

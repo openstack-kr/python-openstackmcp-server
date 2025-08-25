@@ -1,7 +1,7 @@
 from fastmcp import FastMCP
 
 from .base import get_openstack_conn
-from .response.identity import Domain, Region, Project
+from .response.identity import Domain, Project, Region
 
 
 class IdentityTools:
