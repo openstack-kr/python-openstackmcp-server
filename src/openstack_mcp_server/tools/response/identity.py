@@ -13,3 +13,11 @@ class Domain(BaseModel):
     name: str
     description: str | None = None
     is_enabled: bool | None = None
+
+class Project(BaseModel):
+    id: str
+    name: str
+    description: str | None = None
+    is_enabled: bool | None = None
+    domain_id: str | None = None
+    parent_id: str | None = None
