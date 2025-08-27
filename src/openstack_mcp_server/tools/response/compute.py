@@ -20,6 +20,10 @@ class Server(BaseModel):
 
         model_config = ConfigDict(validate_by_name=True)
 
+    class VolumeAttachment(BaseModel):
+        id: str
+        delete_on_termination: bool
+
     class SecurityGroup(BaseModel):
         name: str
 
@@ -35,6 +39,7 @@ class Server(BaseModel):
     security_groups: list[SecurityGroup] | None = None
     accessIPv4: str | None = None
     accessIPv6: str | None = None
+    attached_volumes: list[VolumeAttachment] | None = Field(default=None)
 
 
 class Flavor(BaseModel):
