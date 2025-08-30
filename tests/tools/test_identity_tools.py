@@ -6,7 +6,11 @@ import pytest
 from openstack import exceptions
 
 from openstack_mcp_server.tools.identity_tools import IdentityTools
-from openstack_mcp_server.tools.response.identity import Domain, Region
+from openstack_mcp_server.tools.response.identity import (
+    Domain,
+    Project,
+    Region,
+)
 
 
 class TestIdentityTools:
@@ -715,3 +719,137 @@ class TestIdentityTools:
 
         # Verify mock calls
         mock_conn.identity.update_domain.assert_called_once_with(domain="")
+
+    def test_get_projects_success(self, mock_get_openstack_conn_identity):
+        """Test getting identity projects successfully."""
+        mock_conn = mock_get_openstack_conn_identity
+
+        # Create mock project objects
+        mock_project1 = Mock()
+        mock_project1.id = "project1111111111111111111111111"
+        mock_project1.name = "ProjectOne"
+        mock_project1.description = "Project One description"
+        mock_project1.is_enabled = True
+        mock_project1.domain_id = "domain1111111111111111111111111"
+        mock_project1.parent_id = "parentproject1111111111111111111"
+
+        mock_project2 = Mock()
+        mock_project2.id = "project2222222222222222222222222"
+        mock_project2.name = "ProjectTwo"
+        mock_project2.description = "Project Two description"
+        mock_project2.is_enabled = False
+        mock_project2.domain_id = "domain22222222222222222222222222"
+        mock_project2.parent_id = "default"
+
+        # Configure mock project.projects()
+        mock_conn.identity.projects.return_value = [
+            mock_project1,
+            mock_project2,
+        ]
+
+        # Test get_projects()
+        identity_tools = self.get_identity_tools()
+        result = identity_tools.get_projects()
+
+        # Verify results
+        assert result == [
+            Project(
+                id="project1111111111111111111111111",
+                name="ProjectOne",
+                description="Project One description",
+                is_enabled=True,
+                domain_id="domain1111111111111111111111111",
+                parent_id="parentproject1111111111111111111",
+            ),
+            Project(
+                id="project2222222222222222222222222",
+                name="ProjectTwo",
+                description="Project Two description",
+                is_enabled=False,
+                domain_id="domain22222222222222222222222222",
+                parent_id="default",
+            ),
+        ]
+
+        # Verify mock calls
+        mock_conn.identity.projects.assert_called_once()
+
+    def test_get_projects_empty_list(self, mock_get_openstack_conn_identity):
+        """Test getting identity projects when there are no projects."""
+        mock_conn = mock_get_openstack_conn_identity
+
+        # Empty project list
+        mock_conn.identity.projects.return_value = []
+
+        # Test get_projects()
+        identity_tools = self.get_identity_tools()
+        result = identity_tools.get_projects()
+
+        # Verify results
+        assert result == []
+
+        # Verify mock calls
+        mock_conn.identity.projects.assert_called_once()
+
+    def test_get_project_success(self, mock_get_openstack_conn_identity):
+        """Test getting a identity project successfully."""
+        mock_conn = mock_get_openstack_conn_identity
+
+        # Create mock project object
+        mock_project = Mock()
+        mock_project.id = "project1111111111111111111111111"
+        mock_project.name = "ProjectOne"
+        mock_project.description = "Project One description"
+        mock_project.is_enabled = True
+        mock_project.domain_id = "domain1111111111111111111111111"
+        mock_project.parent_id = "parentproject1111111111111111111"
+
+        # Configure mock project.find_project()
+        mock_conn.identity.find_project.return_value = mock_project
+
+        # Test get_project()
+        identity_tools = self.get_identity_tools()
+        result = identity_tools.get_project(name="ProjectOne")
+
+        # Verify results
+        assert result == Project(
+            id="project1111111111111111111111111",
+            name="ProjectOne",
+            description="Project One description",
+            is_enabled=True,
+            domain_id="domain1111111111111111111111111",
+            parent_id="parentproject1111111111111111111",
+        )
+
+        # Verify mock calls
+        mock_conn.identity.find_project.assert_called_once_with(
+            name_or_id="ProjectOne",
+            ignore_missing=False,
+        )
+
+    def test_get_project_not_found(self, mock_get_openstack_conn_identity):
+        """Test getting a identity project that does not exist."""
+        mock_conn = mock_get_openstack_conn_identity
+
+        # Configure mock to raise NotFoundException
+        mock_conn.identity.find_project.side_effect = (
+            exceptions.NotFoundException(
+                "Project 'ProjectOne' not found",
+            )
+        )
+
+        # Test get_project()
+        identity_tools = self.get_identity_tools()
+
+        # Verify exception is raised
+        with pytest.raises(
+            exceptions.NotFoundException,
+            match="Project 'ProjectOne' not found",
+        ):
+            identity_tools.get_project(name="ProjectOne")
+
+        # Verify mock calls
+        mock_conn.identity.find_project.assert_called_once_with(
+            name_or_id="ProjectOne",
+            ignore_missing=False,
+        )
