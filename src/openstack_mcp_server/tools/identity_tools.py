@@ -1,7 +1,7 @@
 from fastmcp import FastMCP
 
 from .base import get_openstack_conn
-from .response.identity import Domain, Region
+from .response.identity import Domain, Project, Region
 
 
 class IdentityTools:
@@ -25,6 +25,9 @@ class IdentityTools:
         mcp.tool()(self.create_domain)
         mcp.tool()(self.delete_domain)
         mcp.tool()(self.update_domain)
+
+        mcp.tool()(self.get_projects)
+        mcp.tool()(self.get_project)
 
     def get_regions(self) -> list[Region]:
         """
@@ -219,4 +222,50 @@ class IdentityTools:
             name=updated_domain.name,
             description=updated_domain.description,
             is_enabled=updated_domain.is_enabled,
+        )
+
+    def get_projects(self) -> list[Project]:
+        """
+        Get the list of Identity projects.
+
+        :return: A list of Project objects representing the projects.
+        """
+        conn = get_openstack_conn()
+
+        project_list = []
+        for project in conn.identity.projects():
+            project_list.append(
+                Project(
+                    id=project.id,
+                    name=project.name,
+                    description=project.description,
+                    is_enabled=project.is_enabled,
+                    domain_id=project.domain_id,
+                    parent_id=project.parent_id,
+                ),
+            )
+
+        return project_list
+
+    def get_project(self, name: str) -> Project:
+        """
+        Get a project.
+
+        :param name: The name of the project.
+
+        :return: The Project object.
+        """
+        conn = get_openstack_conn()
+
+        project = conn.identity.find_project(
+            name_or_id=name, ignore_missing=False
+        )
+
+        return Project(
+            id=project.id,
+            name=project.name,
+            description=project.description,
+            is_enabled=project.is_enabled,
+            domain_id=project.domain_id,
+            parent_id=project.parent_id,
         )
