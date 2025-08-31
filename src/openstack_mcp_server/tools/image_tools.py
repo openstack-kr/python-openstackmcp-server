@@ -16,8 +16,17 @@ class ImageTools:
         Register Image-related tools with the FastMCP instance.
         """
 
+        mcp.tool()(self.get_image)
         mcp.tool()(self.get_images)
         mcp.tool()(self.create_image)
+
+    def get_image(self, id: str) -> Image:
+        """
+        Get an OpenStack image by ID.
+        """
+        conn = get_openstack_conn()
+        image = conn.image.get_image(id)
+        return Image(**image)
 
     def get_images(
         self,
