@@ -46,6 +46,22 @@ class TestImageTools:
 
         return defaults
 
+    def test_get_image_success(self, mock_get_openstack_conn_image):
+        """Test getting a specific image successfully."""
+        mock_conn = mock_get_openstack_conn_image
+        mock_image = self.image_factory(
+            id="img-123-abc-def",
+            name="ubuntu-20.04-server",
+            status="active",
+            visibility="public",
+        )
+        mock_conn.image.get_image.return_value = mock_image
+        result = ImageTools().get_image("img-123-abc-def")
+
+        mock_conn.image.get_image.assert_called_once_with("img-123-abc-def")
+        expected_output = Image(**mock_image)
+        assert result == expected_output
+
     def test_get_images_success(self, mock_get_openstack_conn_image):
         """Test getting image images successfully."""
         mock_conn = mock_get_openstack_conn_image
