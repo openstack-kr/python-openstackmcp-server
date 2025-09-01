@@ -45,6 +45,8 @@ class ComputeTools:
         mcp.tool()(self.action_server)
         mcp.tool()(self.update_server)
         mcp.tool()(self.delete_server)
+        mcp.tool()(self.attach_volume)
+        mcp.tool()(self.detach_volume)
 
     def get_servers(self) -> list[Server]:
         """
@@ -125,7 +127,7 @@ class ComputeTools:
             flavor_list.append(Flavor(**flavor))
         return flavor_list
 
-    def action_server(self, id: str, action: ServerActionEnum) -> None:
+    def action_server(self, id: str, action: str) -> None:
         """
         Perform an action on a Compute server.
 
@@ -151,19 +153,19 @@ class ComputeTools:
         conn = get_openstack_conn()
 
         action_methods = {
-            ServerActionEnum.PAUSE: conn.compute.pause_server,
-            ServerActionEnum.UNPAUSE: conn.compute.unpause_server,
-            ServerActionEnum.SUSPEND: conn.compute.suspend_server,
-            ServerActionEnum.RESUME: conn.compute.resume_server,
-            ServerActionEnum.LOCK: conn.compute.lock_server,
-            ServerActionEnum.UNLOCK: conn.compute.unlock_server,
-            ServerActionEnum.RESCUE: conn.compute.rescue_server,
-            ServerActionEnum.UNRESCUE: conn.compute.unrescue_server,
-            ServerActionEnum.START: conn.compute.start_server,
-            ServerActionEnum.STOP: conn.compute.stop_server,
-            ServerActionEnum.SHELVE: conn.compute.shelve_server,
-            ServerActionEnum.SHELVE_OFFLOAD: conn.compute.shelve_offload_server,
-            ServerActionEnum.UNSHELVE: conn.compute.unshelve_server,
+            ServerActionEnum.PAUSE.value: conn.compute.pause_server,
+            ServerActionEnum.UNPAUSE.value: conn.compute.unpause_server,
+            ServerActionEnum.SUSPEND.value: conn.compute.suspend_server,
+            ServerActionEnum.RESUME.value: conn.compute.resume_server,
+            ServerActionEnum.LOCK.value: conn.compute.lock_server,
+            ServerActionEnum.UNLOCK.value: conn.compute.unlock_server,
+            ServerActionEnum.RESCUE.value: conn.compute.rescue_server,
+            ServerActionEnum.UNRESCUE.value: conn.compute.unrescue_server,
+            ServerActionEnum.START.value: conn.compute.start_server,
+            ServerActionEnum.STOP.value: conn.compute.stop_server,
+            ServerActionEnum.SHELVE.value: conn.compute.shelve_server,
+            ServerActionEnum.SHELVE_OFFLOAD.value: conn.compute.shelve_offload_server,
+            ServerActionEnum.UNSHELVE.value: conn.compute.unshelve_server,
         }
 
         if action not in action_methods:
@@ -214,3 +216,28 @@ class ComputeTools:
         """
         conn = get_openstack_conn()
         conn.compute.delete_server(id)
+
+    def attach_volume(
+        self, server_id: str, volume_id: str, device: str | None = None
+    ) -> None:
+        """
+        Attach a volume to a Compute server.
+
+        :param server_id: The UUID of the server.
+        :param volume_id: The UUID of the volume to attach.
+        :param device: Name of the device such as, /dev/vdb. If you specify this parameter, the device must not exist in the guest operating system.
+        """
+        conn = get_openstack_conn()
+        conn.compute.create_volume_attachment(
+            server_id, volume_id=volume_id, device=device
+        )
+
+    def detach_volume(self, server_id: str, volume_id: str) -> None:
+        """
+        Detach a volume from a Compute server.
+
+        :param server_id: The UUID of the server.
+        :param volume_id: The UUID of the volume to detach.
+        """
+        conn = get_openstack_conn()
+        conn.compute.delete_volume_attachment(server_id, volume_id)
