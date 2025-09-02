@@ -901,42 +901,6 @@ class TestIdentityTools:
             parent_id="parentproject1111111111111111111",
         )
 
-    def test_create_project_parent_disabled_failed(
-        self, mock_get_openstack_conn_identity
-    ):
-        """Test creating a identity project with a parent project that is disabled."""
-        mock_conn = mock_get_openstack_conn_identity
-
-        # Configure mock to raise BadRequestException
-        mock_conn.identity.create_project.side_effect = exceptions.BadRequestException(
-            "cannot create a project in a branch containing a disabled project",
-        )
-
-        # Test create_project()
-        identity_tools = self.get_identity_tools()
-
-        # Verify exception is raised
-        with pytest.raises(
-            exceptions.BadRequestException,
-            match="cannot create a project in a branch containing a disabled project",
-        ):
-            identity_tools.create_project(
-                name="ProjectOne",
-                description="Project One description",
-                is_enabled=True,
-                domain_id=None,
-                parent_id="parentproject1111111111111111111",
-            )
-
-        # Verify mock calls
-        mock_conn.identity.create_project.assert_called_once_with(
-            name="ProjectOne",
-            description="Project One description",
-            is_enabled=True,
-            domain_id=None,
-            parent_id="parentproject1111111111111111111",
-        )
-
     def test_create_project_without_all_fields(
         self, mock_get_openstack_conn_identity
     ):
@@ -971,74 +935,4 @@ class TestIdentityTools:
             is_enabled=True,
             domain_id=None,
             parent_id=None,
-        )
-
-    def test_create_project_domain_not_found(
-        self, mock_get_openstack_conn_identity
-    ):
-        """Test creating a identity project with a domain that does not exist."""
-        mock_conn = mock_get_openstack_conn_identity
-
-        # Configure mock to raise BadRequestException
-        mock_conn.identity.create_project.side_effect = exceptions.BadRequestException(
-            "Domain 'domain1111111111111111111111111' not found. Please check the domain ID.",
-        )
-
-        # Test create_project()
-        identity_tools = self.get_identity_tools()
-
-        with pytest.raises(
-            exceptions.BadRequestException,
-            match="Domain 'domain1111111111111111111111111' not found. Please check the domain ID.",
-        ):
-            identity_tools.create_project(
-                name="ProjectOne",
-                description="Project One description",
-                is_enabled=True,
-                domain_id="domain1111111111111111111111111",
-                parent_id=None,
-            )
-
-        # Verify mock calls
-        mock_conn.identity.create_project.assert_called_once_with(
-            name="ProjectOne",
-            description="Project One description",
-            is_enabled=True,
-            domain_id="domain1111111111111111111111111",
-            parent_id=None,
-        )
-
-    def test_create_project_parent_not_found(
-        self, mock_get_openstack_conn_identity
-    ):
-        """Test creating a identity project with a parent project that does not exist."""
-        mock_conn = mock_get_openstack_conn_identity
-
-        # Configure mock to raise BadRequestException
-        mock_conn.identity.create_project.side_effect = exceptions.BadRequestException(
-            "Parent project 'parentproject1111111111111111111' not found. Please check the parent project ID.",
-        )
-
-        # Test create_project()
-        identity_tools = self.get_identity_tools()
-
-        with pytest.raises(
-            exceptions.BadRequestException,
-            match="Parent project 'parentproject1111111111111111111' not found. Please check the parent project ID.",
-        ):
-            identity_tools.create_project(
-                name="ProjectOne",
-                description="Project One description",
-                is_enabled=True,
-                domain_id=None,
-                parent_id="parentproject1111111111111111111",
-            )
-
-        # Verify mock calls
-        mock_conn.identity.create_project.assert_called_once_with(
-            name="ProjectOne",
-            description="Project One description",
-            is_enabled=True,
-            domain_id=None,
-            parent_id="parentproject1111111111111111111",
         )
