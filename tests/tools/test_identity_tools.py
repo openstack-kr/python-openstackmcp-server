@@ -853,3 +853,86 @@ class TestIdentityTools:
             name_or_id="ProjectOne",
             ignore_missing=False,
         )
+
+    def test_create_project_success_with_all_fields(
+        self, mock_get_openstack_conn_identity
+    ):
+        """Test creating a identity project successfully."""
+        mock_conn = mock_get_openstack_conn_identity
+
+        # Create mock project object
+        mock_project = Mock()
+        mock_project.id = "project1111111111111111111111111"
+        mock_project.name = "ProjectOne"
+        mock_project.description = "Project One description"
+        mock_project.is_enabled = True
+        mock_project.domain_id = "domain1111111111111111111111111"
+        mock_project.parent_id = "parentproject1111111111111111111"
+
+        # Configure mock project.create_project()
+        mock_conn.identity.create_project.return_value = mock_project
+
+        # Test create_project()
+        identity_tools = self.get_identity_tools()
+        result = identity_tools.create_project(
+            name="ProjectOne",
+            description="Project One description",
+            is_enabled=True,
+            domain_id="domain1111111111111111111111111",
+            parent_id="parentproject1111111111111111111",
+        )
+
+        # Verify results
+        assert result == Project(
+            id="project1111111111111111111111111",
+            name="ProjectOne",
+            description="Project One description",
+            is_enabled=True,
+            domain_id="domain1111111111111111111111111",
+            parent_id="parentproject1111111111111111111",
+        )
+
+        # Verify mock calls
+        mock_conn.identity.create_project.assert_called_once_with(
+            name="ProjectOne",
+            description="Project One description",
+            is_enabled=True,
+            domain_id="domain1111111111111111111111111",
+            parent_id="parentproject1111111111111111111",
+        )
+
+    def test_create_project_without_all_fields(
+        self, mock_get_openstack_conn_identity
+    ):
+        """Test creating a identity project without all fields."""
+        mock_conn = mock_get_openstack_conn_identity
+
+        mock_conn.identity.create_project.side_effect = (
+            exceptions.BadRequestException(
+                "Field required",
+            )
+        )
+
+        # Test create_project()
+        identity_tools = self.get_identity_tools()
+
+        with pytest.raises(
+            exceptions.BadRequestException,
+            match="Field required",
+        ):
+            identity_tools.create_project(
+                name="ProjectOne",
+                description="Project One description",
+                is_enabled=True,
+                domain_id=None,
+                parent_id=None,
+            )
+
+        # Verify mock calls
+        mock_conn.identity.create_project.assert_called_once_with(
+            name="ProjectOne",
+            description="Project One description",
+            is_enabled=True,
+            domain_id=None,
+            parent_id=None,
+        )
