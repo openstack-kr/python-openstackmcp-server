@@ -28,6 +28,7 @@ class IdentityTools:
 
         mcp.tool()(self.get_projects)
         mcp.tool()(self.get_project)
+        mcp.tool()(self.create_project)
 
     def get_regions(self) -> list[Region]:
         """
@@ -259,6 +260,44 @@ class IdentityTools:
 
         project = conn.identity.find_project(
             name_or_id=name, ignore_missing=False
+        )
+
+        return Project(
+            id=project.id,
+            name=project.name,
+            description=project.description,
+            is_enabled=project.is_enabled,
+            domain_id=project.domain_id,
+            parent_id=project.parent_id,
+        )
+
+    def create_project(
+        self,
+        name: str,
+        description: str | None = None,
+        is_enabled: bool = True,
+        domain_id: str | None = None,
+        parent_id: str | None = None,
+    ) -> Project:
+        """
+        Create a new project.
+
+        :param name: The name of the project.
+        :param description: The description of the project.
+        :param is_enabled: Whether the project is enabled.
+        :param domain_id: The ID of the domain.
+        :param parent_id: The ID of the parent project.
+
+        :return: The created Project object.
+        """
+        conn = get_openstack_conn()
+
+        project = conn.identity.create_project(
+            name=name,
+            description=description,
+            is_enabled=is_enabled,
+            domain_id=domain_id,
+            parent_id=parent_id,
         )
 
         return Project(
