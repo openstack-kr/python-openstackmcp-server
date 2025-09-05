@@ -29,6 +29,7 @@ class IdentityTools:
         mcp.tool()(self.get_projects)
         mcp.tool()(self.get_project)
         mcp.tool()(self.create_project)
+        mcp.tool()(self.delete_project)
 
     def get_regions(self) -> list[Region]:
         """
@@ -308,3 +309,13 @@ class IdentityTools:
             domain_id=project.domain_id,
             parent_id=project.parent_id,
         )
+
+    def delete_project(self, id: str) -> None:
+        """
+        Delete a project.
+
+        :param name: The name of the project.
+        """
+        conn = get_openstack_conn()
+        conn.identity.delete_project(project=id, ignore_missing=False)
+        return None

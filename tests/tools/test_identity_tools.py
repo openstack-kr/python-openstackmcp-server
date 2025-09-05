@@ -936,3 +936,50 @@ class TestIdentityTools:
             domain_id=None,
             parent_id=None,
         )
+
+    def test_delete_project_success(self, mock_get_openstack_conn_identity):
+        """Test deleting a identity project successfully."""
+        mock_conn = mock_get_openstack_conn_identity
+
+        # Test delete_project()
+        identity_tools = self.get_identity_tools()
+        result = identity_tools.delete_project(
+            id="project1111111111111111111111111"
+        )
+
+        # Verify results
+        assert result is None
+
+        # Verify mock calls
+        mock_conn.identity.delete_project.assert_called_once_with(
+            project="project1111111111111111111111111",
+            ignore_missing=False,
+        )
+
+    def test_delete_project_not_found(self, mock_get_openstack_conn_identity):
+        """Test deleting a identity project that does not exist."""
+        mock_conn = mock_get_openstack_conn_identity
+
+        # Configure mock to raise NotFoundException
+        mock_conn.identity.delete_project.side_effect = (
+            exceptions.NotFoundException(
+                "Project 'project1111111111111111111111111' not found",
+            )
+        )
+
+        # Test delete_project()
+        identity_tools = self.get_identity_tools()
+
+        with pytest.raises(
+            exceptions.NotFoundException,
+            match="Project 'project1111111111111111111111111' not found",
+        ):
+            identity_tools.delete_project(
+                id="project1111111111111111111111111"
+            )
+
+        # Verify mock calls
+        mock_conn.identity.delete_project.assert_called_once_with(
+            project="project1111111111111111111111111",
+            ignore_missing=False,
+        )
