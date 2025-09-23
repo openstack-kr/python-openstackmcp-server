@@ -30,6 +30,7 @@ class IdentityTools:
         mcp.tool()(self.get_project)
         mcp.tool()(self.create_project)
         mcp.tool()(self.delete_project)
+        mcp.tool()(self.update_project)
 
     def get_regions(self) -> list[Region]:
         """
@@ -319,3 +320,49 @@ class IdentityTools:
         conn = get_openstack_conn()
         conn.identity.delete_project(project=id, ignore_missing=False)
         return None
+
+    def update_project(
+        self,
+        id: str,
+        name: str | None = None,
+        description: str | None = None,
+        is_enabled: bool | None = None,
+        domain_id: str | None = None,
+        parent_id: str | None = None,
+    ) -> Project:
+        """
+        Update a project.
+
+        :param id: The ID of the project.
+        :param name: The name of the project.
+        :param description: The description of the project.
+        :param is_enabled: Whether the project is enabled.
+        :param domain_id: The ID of the domain.
+        :param parent_id: The ID of the parent project.
+
+        :return: The updated Project object.
+        """
+        conn = get_openstack_conn()
+
+        args = {}
+        if name is not None:
+            args["name"] = name
+        if description is not None:
+            args["description"] = description
+        if is_enabled is not None:
+            args["is_enabled"] = is_enabled
+        if domain_id is not None:
+            args["domain_id"] = domain_id
+        if parent_id is not None:
+            args["parent_id"] = parent_id
+
+        updated_project = conn.identity.update_project(project=id, **args)
+
+        return Project(
+            id=updated_project.id,
+            name=updated_project.name,
+            description=updated_project.description,
+            is_enabled=updated_project.is_enabled,
+            domain_id=updated_project.domain_id,
+            parent_id=updated_project.parent_id,
+        )
