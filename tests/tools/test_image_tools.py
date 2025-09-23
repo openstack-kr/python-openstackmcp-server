@@ -297,3 +297,16 @@ class TestImageTools:
         assert mock_get_openstack_conn_image.get_image.called_once_with(
             mock_image["id"],
         )
+
+    def test_delete_image_success(self, mock_get_openstack_conn_image):
+        """Test deleting an image successfully."""
+        mock_conn = mock_get_openstack_conn_image
+        image_id = "img-delete-123-456"
+
+        mock_conn.image.delete_image.return_value = None
+
+        image_tools = ImageTools()
+        result = image_tools.delete_image(image_id)
+
+        assert result is None
+        mock_conn.image.delete_image.assert_called_once_with(image_id)
