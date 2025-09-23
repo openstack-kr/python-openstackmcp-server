@@ -2,6 +2,10 @@ import uuid
 
 from unittest.mock import Mock
 
+import pytest
+
+from openstack.exceptions import NotFoundException
+
 from openstack_mcp_server.tools.image_tools import ImageTools
 from openstack_mcp_server.tools.request.image import CreateImage
 from openstack_mcp_server.tools.response.image import Image
@@ -281,3 +285,27 @@ class TestImageTools:
         assert mock_get_openstack_conn_image.get_image.called_once_with(
             mock_image["id"],
         )
+
+    def test_delete_image_success(self, mock_get_openstack_conn_image):
+        """Test deleting an image successfully."""
+        mock_conn = mock_get_openstack_conn_image
+        image_id = "img-delete-123-456"
+
+        mock_conn.image.delete_image.return_value = None
+
+        image_tools = ImageTools()
+        result = image_tools.delete_image(image_id)
+
+        assert result is None
+        mock_conn.image.delete_image.assert_called_once_with(image_id)
+
+    def test_delete_image_not_found(self, mock_get_openstack_conn_image):
+        """Test deleting an image that does not exist."""
+        mock_conn = mock_get_openstack_conn_image
+        image_id = "img-delete-123-456"
+        mock_conn.image.delete_image.side_effect = NotFoundException()
+
+        image_tools = ImageTools()
+        with pytest.raises(NotFoundException):
+            image_tools.delete_image(image_id)
+        mock_conn.image.delete_image.assert_called_once_with(image_id)
