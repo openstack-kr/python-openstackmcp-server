@@ -2,6 +2,8 @@ from fastmcp import FastMCP
 
 from .base import get_openstack_conn
 from .response.block_storage import (
+    Attachment,
+    ConnectionInfo,
     Volume,
     VolumeAttachment,
 )
@@ -22,6 +24,8 @@ class BlockStorageTools:
         mcp.tool()(self.delete_volume)
         mcp.tool()(self.extend_volume)
 
+        mcp.tool()(self.get_attachment_details)
+
     def get_volumes(self) -> list[Volume]:
         """
         Get the list of Block Storage volumes.
@@ -39,7 +43,7 @@ class BlockStorageTools:
                     VolumeAttachment(
                         server_id=attachment.get("server_id"),
                         device=attachment.get("device"),
-                        attachment_id=attachment.get("id"),
+                        attachment_id=attachment.get("attachment_id"),
                     ),
                 )
 
@@ -183,3 +187,41 @@ class BlockStorageTools:
         conn = get_openstack_conn()
 
         conn.block_storage.extend_volume(volume_id, new_size)
+
+    def get_attachment_details(self, attachment_id: str) -> Attachment:
+        """
+        Get detailed information about a specific attachment.
+
+        :param attachment_id: The ID of the attachment to get details for
+        :return: An Attachment object with detailed information
+        """
+        conn = get_openstack_conn()
+
+        attachment = conn.block_storage.get_attachment(attachment_id)
+
+        # NOTE: We exclude the auth_* fields for security reasons
+        connection_info = attachment.connection_info
+        filtered_connection_info = ConnectionInfo(
+            access_mode=connection_info.get("access_mode"),
+            cacheable=connection_info.get("cacheable"),
+            driver_volume_type=connection_info.get("driver_volume_type"),
+            encrypted=connection_info.get("encrypted"),
+            qos_specs=connection_info.get("qos_specs"),
+            target_discovered=connection_info.get("target_discovered"),
+            target_iqn=connection_info.get("target_iqn"),
+            target_lun=connection_info.get("target_lun"),
+            target_portal=connection_info.get("target_portal"),
+        )
+
+        params = {
+            "id": attachment.id,
+            "instance": attachment.instance,
+            "volume_id": attachment.volume_id,
+            "attached_at": attachment.attached_at,
+            "detached_at": attachment.detached_at,
+            "attach_mode": attachment.attach_mode,
+            "connection_info": filtered_connection_info,
+            "connector": attachment.connector,
+        }
+
+        return Attachment(**params)
