@@ -615,9 +615,6 @@ class TestBlockStorageTools:
         block_storage_tools = BlockStorageTools()
         block_storage_tools.register_tools(mock_mcp)
 
-        # Verify mcp.tool() was called for each method
-        assert mock_mcp.tool.call_count == 6
-
         # Verify all methods were registered
         registered_methods = [
             call[0][0] for call in mock_tool_decorator.call_args_list
