@@ -19,3 +19,26 @@ class Volume(BaseModel):
     is_encrypted: bool | None = None
     description: str | None = None
     attachments: list[VolumeAttachment] = []
+
+
+class ConnectionInfo(BaseModel):
+    access_mode: str | None = None
+    cacheable: bool | None = None
+    driver_volume_type: str | None = None
+    encrypted: bool | None = None
+    qos_specs: str | None = None
+    target_discovered: bool | None = None
+    target_iqn: str | None = None
+    target_lun: int | None = None
+    target_portal: str | None = None
+
+
+class Attachment(BaseModel):
+    id: str
+    instance: str
+    volume_id: str
+    attached_at: str | None = None
+    detached_at: str | None = None
+    attach_mode: str | None = None
+    connection_info: ConnectionInfo | None = None
+    connector: str | None = None
