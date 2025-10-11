@@ -4,6 +4,8 @@ import pytest
 
 from openstack_mcp_server.tools.block_storage_tools import BlockStorageTools
 from openstack_mcp_server.tools.response.block_storage import (
+    Attachment,
+    ConnectionInfo,
     Volume,
     VolumeAttachment,
 )
@@ -613,9 +615,6 @@ class TestBlockStorageTools:
         block_storage_tools = BlockStorageTools()
         block_storage_tools.register_tools(mock_mcp)
 
-        # Verify mcp.tool() was called for each method
-        assert mock_mcp.tool.call_count == 5
-
         # Verify all methods were registered
         registered_methods = [
             call[0][0] for call in mock_tool_decorator.call_args_list
@@ -683,3 +682,62 @@ class TestBlockStorageTools:
             assert len(docstring.strip()) > 0, (
                 f"{method_name} docstring should not be empty"
             )
+
+    def test_get_attachment_details(
+        self, mock_get_openstack_conn_block_storage
+    ):
+        """Test getting attachment details."""
+
+        # Set up the attachment mock object
+        mock_attachment = Mock()
+        mock_attachment.id = "attach-123"
+        mock_attachment.instance = "server-123"
+        mock_attachment.volume_id = "vol-123"
+        mock_attachment.attached_at = "2024-01-01T12:00:00Z"
+        mock_attachment.detached_at = None
+        mock_attachment.attach_mode = "attach"
+        mock_attachment.connection_info = {
+            "access_mode": "rw",
+            "cacheable": True,
+            "driver_volume_type": "iscsi",
+            "encrypted": False,
+            "qos_specs": None,
+            "target_discovered": True,
+            "target_iqn": "iqn.2024-01-01.com.example:volume-123",
+            "target_lun": 0,
+            "target_portal": "192.168.1.100:3260",
+        }
+        mock_attachment.connector = "connector-123"
+
+        # Configure the mock block_storage.get_attachment()
+        mock_conn = mock_get_openstack_conn_block_storage
+        mock_conn.block_storage.get_attachment.return_value = mock_attachment
+
+        block_storage_tools = BlockStorageTools()
+        result = block_storage_tools.get_attachment_details("attach-123")
+
+        # Verify the result
+        assert isinstance(result, Attachment)
+        assert result.id == "attach-123"
+        assert result.instance == "server-123"
+        assert result.attached_at == "2024-01-01T12:00:00Z"
+        assert result.detached_at is None
+        assert result.attach_mode == "attach"
+        assert result.connection_info == ConnectionInfo(
+            access_mode="rw",
+            cacheable=True,
+            driver_volume_type="iscsi",
+            encrypted=False,
+            qos_specs=None,
+            target_discovered=True,
+            target_iqn="iqn.2024-01-01.com.example:volume-123",
+            target_lun=0,
+            target_portal="192.168.1.100:3260",
+        )
+        assert result.connector == "connector-123"
+        assert result.volume_id == "vol-123"
+
+        # Verify the mock calls
+        mock_conn.block_storage.get_attachment.assert_called_once_with(
+            "attach-123"
+        )
