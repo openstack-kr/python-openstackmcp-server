@@ -43,10 +43,9 @@ class Attachment(BaseModel):
     connection_info: ConnectionInfo | None = None
     connector: str | None = None
 
-      
+
 class AttachmentSummary(BaseModel):
     id: str
     instance: str
     volume_id: str
     status: str
-
