@@ -3,6 +3,7 @@ from fastmcp import FastMCP
 from .base import get_openstack_conn
 from .response.block_storage import (
     Attachment,
+    AttachmentSummary,
     ConnectionInfo,
     Volume,
     VolumeAttachment,
@@ -25,6 +26,7 @@ class BlockStorageTools:
         mcp.tool()(self.extend_volume)
 
         mcp.tool()(self.get_attachment_details)
+        mcp.tool()(self.get_attachments)
 
     def get_volumes(self) -> list[Volume]:
         """
@@ -225,3 +227,34 @@ class BlockStorageTools:
         }
 
         return Attachment(**params)
+
+    def get_attachments(
+        self,
+        volume_id: str | None = None,
+        instance: str | None = None,
+    ) -> list[Attachment]:
+        """
+        Get the list of attachments.
+
+        :return: A list of Attachment objects.
+        """
+        conn = get_openstack_conn()
+
+        filter = {}
+        if volume_id:
+            filter["volume_id"] = volume_id
+        if instance:
+            filter["instance"] = instance
+
+        attachments = []
+        for attachment in conn.block_storage.attachments(**filter):
+            attachments.append(
+                AttachmentSummary(
+                    id=attachment.id,
+                    instance=attachment.instance,
+                    volume_id=attachment.volume_id,
+                    status=attachment.status,
+                )
+            )
+
+        return attachments

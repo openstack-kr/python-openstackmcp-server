@@ -741,3 +741,36 @@ class TestBlockStorageTools:
         mock_conn.block_storage.get_attachment.assert_called_once_with(
             "attach-123"
         )
+
+    def test_get_attachments(self, mock_get_openstack_conn_block_storage):
+        """Test getting attachments."""
+        mock_conn = mock_get_openstack_conn_block_storage
+
+        # Create mock attachment object
+        mock_attachment = Mock()
+        mock_attachment.id = "attach-123"
+        mock_attachment.instance = "server-123"
+        mock_attachment.volume_id = "vol-123"
+        mock_attachment.status = "attached"
+
+        mock_conn.block_storage.attachments.return_value = [mock_attachment]
+
+        # Test attachments
+        block_storage_tools = BlockStorageTools()
+
+        filter = {
+            "volume_id": "vol-123",
+            "instance": "server-123",
+        }
+        result = block_storage_tools.get_attachments(**filter)
+
+        # Verify the result
+        assert isinstance(result, list)
+        assert len(result) == 1
+        assert result[0].id == "attach-123"
+        assert result[0].instance == "server-123"
+        assert result[0].volume_id == "vol-123"
+        assert result[0].status == "attached"
+
+        # Verify the mock calls
+        mock_conn.block_storage.attachments.assert_called_once_with(**filter)
