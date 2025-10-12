@@ -236,6 +236,8 @@ class BlockStorageTools:
         """
         Get the list of attachments.
 
+        :param volume_id: The ID of the volume.
+        :param instance: The ID of the instance.
         :return: A list of Attachment objects.
         """
         conn = get_openstack_conn()
