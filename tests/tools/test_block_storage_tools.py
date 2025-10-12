@@ -301,12 +301,12 @@ class TestBlockStorageTools:
             {
                 "server_id": "server-123",
                 "device": "/dev/vdb",
-                "id": "attach-1",
+                "attachment_id": "attach-1",
             },
             {
                 "server_id": "server-456",
                 "device": "/dev/vdc",
-                "id": "attach-2",
+                "attachment_id": "attach-2",
             },
         ]
 

@@ -86,7 +86,7 @@ class BlockStorageTools:
                 VolumeAttachment(
                     server_id=attachment.get("server_id"),
                     device=attachment.get("device"),
-                    attachment_id=attachment.get("id"),
+                    attachment_id=attachment.get("attachment_id"),
                 ),
             )
 
