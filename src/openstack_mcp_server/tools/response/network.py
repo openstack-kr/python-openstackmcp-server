@@ -59,6 +59,12 @@ class Router(BaseModel):
     routes: list[dict] | None = None
 
 
+class RouterInterface(BaseModel):
+    router_id: str
+    port_id: str
+    subnet_id: str | None = None
+
+
 class SecurityGroup(BaseModel):
     id: str
     name: str | None = None
