@@ -10,6 +10,7 @@ from .response.network import (
     Network,
     Port,
     Router,
+    RouterInterface,
     Subnet,
 )
 
@@ -52,6 +53,9 @@ class NetworkTools:
         mcp.tool()(self.get_router_detail)
         mcp.tool()(self.update_router)
         mcp.tool()(self.delete_router)
+        mcp.tool()(self.add_router_interface)
+        mcp.tool()(self.get_router_interfaces)
+        mcp.tool()(self.remove_router_interface)
 
     def get_networks(
         self,
@@ -1037,6 +1041,89 @@ class NetworkTools:
         conn = get_openstack_conn()
         conn.network.delete_router(router_id, ignore_missing=False)
         return None
+
+    def add_router_interface(
+        self,
+        router_id: str,
+        subnet_id: str | None = None,
+        port_id: str | None = None,
+    ) -> RouterInterface:
+        """
+        Add an interface to a Router by subnet or port.
+        Provide either subnet_id or port_id.
+
+        :param router_id: Target router ID
+        :param subnet_id: Subnet ID to attach (mutually exclusive with port_id)
+        :param port_id: Port ID to attach (mutually exclusive with subnet_id)
+        :return: Created/attached router interface information as RouterInterface
+        """
+        conn = get_openstack_conn()
+        args: dict = {}
+        args["subnet_id"] = subnet_id
+        args["port_id"] = port_id
+        res = conn.network.add_interface_to_router(router_id, **args)
+        return RouterInterface(
+            router_id=res.get("router_id", router_id),
+            port_id=res.get("port_id"),
+            subnet_id=res.get("subnet_id"),
+        )
+
+    def get_router_interfaces(self, router_id: str) -> list[RouterInterface]:
+        """
+        List interfaces attached to a Router.
+
+        :param router_id: Target router ID
+        :return: List of RouterInterface objects representing router-owned ports
+        """
+        conn = get_openstack_conn()
+        filters = {
+            "device_id": router_id,
+            "device_owner": "network:router_interface",
+        }
+        ports = conn.network.ports(**filters)
+        result: list[RouterInterface] = []
+        for p in ports:
+            subnet_id = None
+            if getattr(p, "fixed_ips", None):
+                first = p.fixed_ips[0]
+                if isinstance(first, dict):
+                    subnet_id = first.get("subnet_id")
+            result.append(
+                RouterInterface(
+                    router_id=router_id,
+                    port_id=p.id,
+                    subnet_id=subnet_id,
+                )
+            )
+        return result
+
+    def remove_router_interface(
+        self,
+        router_id: str,
+        subnet_id: str | None = None,
+        port_id: str | None = None,
+    ) -> RouterInterface:
+        """
+        Remove an interface from a Router by subnet or port.
+        Provide either subnet_id or port_id.
+
+        :param router_id: Target router ID
+        :param subnet_id: Subnet ID to detach (mutually exclusive with port_id)
+        :param port_id: Port ID to detach (mutually exclusive with subnet_id)
+        :return: Detached interface information as RouterInterface
+        """
+        conn = get_openstack_conn()
+        args: dict = {}
+        if subnet_id is not None:
+            args["subnet_id"] = subnet_id
+        if port_id is not None:
+            args["port_id"] = port_id
+        res = conn.network.remove_interface_from_router(router_id, **args)
+        return RouterInterface(
+            router_id=res.get("router_id", router_id),
+            port_id=res.get("port_id"),
+            subnet_id=res.get("subnet_id"),
+        )
 
     def _convert_to_router_model(self, openstack_router) -> Router:
         """
