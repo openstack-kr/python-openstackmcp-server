@@ -738,7 +738,7 @@ class TestNetworkTools:
         new_fixed = list(current.fixed_ips)
         new_fixed.append({"subnet_id": "subnet-2", "ip_address": "10.0.1.10"})
         res = tools.update_port("port-1", fixed_ips=new_fixed)
-        assert len(res.fixed_ips or []) == 2
+        assert len(res.fixed_ips) == 2
 
     def test_remove_port_fixed_ip(self, mock_openstack_connect_network):
         mock_conn = mock_openstack_connect_network
@@ -773,7 +773,7 @@ class TestNetworkTools:
             fi for fi in current.fixed_ips if fi["ip_address"] != "10.0.1.10"
         ]
         res = tools.update_port("port-1", fixed_ips=filtered)
-        assert len(res.fixed_ips or []) == 1
+        assert len(res.fixed_ips) == 1
 
     def test_get_and_update_allowed_address_pairs(
         self,
@@ -1349,6 +1349,7 @@ class TestNetworkTools:
         mock_conn.network.create_ip.side_effect = [f1]
         bulk = tools.create_floating_ips_bulk("ext-net", 1)
         assert len(bulk) == 1
+        assert bulk[0].id == f1.id
 
         exists = Mock()
         exists.id = "fip-b"
