@@ -19,6 +19,7 @@ class ImageTools:
         mcp.tool()(self.get_image)
         mcp.tool()(self.get_images)
         mcp.tool()(self.create_image)
+        mcp.tool()(self.delete_image)
 
     def get_image(self, id: str) -> Image:
         """
@@ -121,3 +122,13 @@ class ImageTools:
 
         image = conn.get_image(created_image.id)
         return Image(**image)
+
+    def delete_image(self, image_id: str) -> None:
+        """
+        Delete an OpenStack image.
+
+        :param image_id: The ID of the image to delete.
+        :return: None
+        """
+        conn = get_openstack_conn()
+        conn.image.delete_image(image_id)
