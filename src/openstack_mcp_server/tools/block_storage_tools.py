@@ -25,6 +25,7 @@ class BlockStorageTools:
         mcp.tool()(self.extend_volume)
 
         mcp.tool()(self.get_attachment_details)
+        mcp.tool()(self.get_attachments)
 
     def get_volumes(self) -> list[Volume]:
         """
@@ -225,3 +226,41 @@ class BlockStorageTools:
         }
 
         return Attachment(**params)
+
+    def get_attachments(
+        self,
+        volume_id: str | None = None,
+        instance: str | None = None,
+    ) -> list[Attachment]:
+        """
+        Get the list of attachments.
+
+        :param volume_id: The ID of the volume.
+        :param instance: The ID of the instance.
+        :return: A list of Attachment objects.
+        """
+        conn = get_openstack_conn()
+
+        filter = {}
+        if volume_id:
+            filter["volume_id"] = volume_id
+        if instance:
+            filter["instance"] = instance
+
+        attachments = []
+        for attachment in conn.block_storage.attachments(**filter):
+            attachments.append(
+                Attachment(
+                    id=attachment.id,
+                    instance=attachment.instance,
+                    volume_id=attachment.volume_id,
+                    status=attachment.status,
+                    connection_info=attachment.connection_info,
+                    attach_mode=attachment.attach_mode,
+                    connector=attachment.connector,
+                    attached_at=attachment.attached_at,
+                    detached_at=attachment.detached_at,
+                )
+            )
+
+        return attachments
