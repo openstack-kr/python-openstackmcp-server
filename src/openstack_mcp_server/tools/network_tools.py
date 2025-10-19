@@ -11,6 +11,8 @@ from .response.network import (
     Port,
     Router,
     RouterInterface,
+    SecurityGroup,
+    SecurityGroupRule,
     Subnet,
 )
 
@@ -56,6 +58,11 @@ class NetworkTools:
         mcp.tool()(self.add_router_interface)
         mcp.tool()(self.get_router_interfaces)
         mcp.tool()(self.remove_router_interface)
+        mcp.tool()(self.get_security_groups)
+        mcp.tool()(self.create_security_group)
+        mcp.tool()(self.get_security_group_detail)
+        mcp.tool()(self.update_security_group)
+        mcp.tool()(self.delete_security_group)
 
     def get_networks(
         self,
@@ -171,9 +178,9 @@ class NetworkTools:
 
         update_args = {}
 
-        if name is not None:
+        if name:
             update_args["name"] = name
-        if description is not None:
+        if description:
             update_args["description"] = description
         if is_admin_state_up is not None:
             update_args["admin_state_up"] = is_admin_state_up
@@ -305,11 +312,11 @@ class NetworkTools:
             "ip_version": ip_version,
             "enable_dhcp": is_dhcp_enabled,
         }
-        if name is not None:
+        if name:
             subnet_args["name"] = name
-        if description is not None:
+        if description:
             subnet_args["description"] = description
-        if gateway_ip is not None:
+        if gateway_ip:
             subnet_args["gateway_ip"] = gateway_ip
         if dns_nameservers is not None:
             subnet_args["dns_nameservers"] = dns_nameservers
@@ -378,13 +385,13 @@ class NetworkTools:
         """
         conn = get_openstack_conn()
         update_args: dict = {}
-        if name is not None:
+        if name:
             update_args["name"] = name
-        if description is not None:
+        if description:
             update_args["description"] = description
         if clear_gateway:
             update_args["gateway_ip"] = None
-        elif gateway_ip is not None:
+        elif gateway_ip:
             update_args["gateway_ip"] = gateway_ip
         if is_dhcp_enabled is not None:
             update_args["enable_dhcp"] = is_dhcp_enabled
@@ -492,9 +499,9 @@ class NetworkTools:
         """
         conn = get_openstack_conn()
         update_args: dict = {}
-        if host_id is not None:
+        if host_id:
             update_args["binding_host_id"] = host_id
-        if vnic_type is not None:
+        if vnic_type:
             update_args["binding_vnic_type"] = vnic_type
         if profile is not None:
             update_args["binding_profile"] = profile
@@ -531,11 +538,11 @@ class NetworkTools:
             "network_id": network_id,
             "admin_state_up": is_admin_state_up,
         }
-        if name is not None:
+        if name:
             port_args["name"] = name
-        if description is not None:
+        if description:
             port_args["description"] = description
-        if device_id is not None:
+        if device_id:
             port_args["device_id"] = device_id
         if fixed_ips is not None:
             port_args["fixed_ips"] = fixed_ips
@@ -604,13 +611,13 @@ class NetworkTools:
         """
         conn = get_openstack_conn()
         update_args: dict = {}
-        if name is not None:
+        if name:
             update_args["name"] = name
-        if description is not None:
+        if description:
             update_args["description"] = description
         if is_admin_state_up is not None:
             update_args["admin_state_up"] = is_admin_state_up
-        if device_id is not None:
+        if device_id:
             update_args["device_id"] = device_id
         if security_group_ids is not None:
             update_args["security_groups"] = security_group_ids
@@ -717,13 +724,13 @@ class NetworkTools:
         """
         conn = get_openstack_conn()
         ip_args: dict = {"floating_network_id": floating_network_id}
-        if description is not None:
+        if description:
             ip_args["description"] = description
-        if fixed_ip_address is not None:
+        if fixed_ip_address:
             ip_args["fixed_ip_address"] = fixed_ip_address
-        if port_id is not None:
+        if port_id:
             ip_args["port_id"] = port_id
-        if project_id is not None:
+        if project_id:
             ip_args["project_id"] = project_id
         ip = conn.network.create_ip(**ip_args)
         return self._convert_to_floating_ip_model(ip)
@@ -744,7 +751,7 @@ class NetworkTools:
         """
         conn = get_openstack_conn()
         update_args: dict = {"port_id": port_id}
-        if fixed_ip_address is not None:
+        if fixed_ip_address:
             update_args["fixed_ip_address"] = fixed_ip_address
         ip = conn.network.update_ip(floating_ip_id, **update_args)
         return self._convert_to_floating_ip_model(ip)
@@ -783,11 +790,11 @@ class NetworkTools:
         """
         conn = get_openstack_conn()
         update_args: dict = {}
-        if description is not None:
+        if description:
             update_args["description"] = description
-        if port_id is not None:
+        if port_id:
             update_args["port_id"] = port_id
-            if fixed_ip_address is not None:
+            if fixed_ip_address:
                 update_args["fixed_ip_address"] = fixed_ip_address
         else:
             if clear_port:
@@ -947,13 +954,13 @@ class NetworkTools:
         """
         conn = get_openstack_conn()
         router_args: dict = {"admin_state_up": is_admin_state_up}
-        if name is not None:
+        if name:
             router_args["name"] = name
-        if description is not None:
+        if description:
             router_args["description"] = description
         if is_distributed is not None:
             router_args["distributed"] = is_distributed
-        if project_id is not None:
+        if project_id:
             router_args["project_id"] = project_id
         if external_gateway_info is not None:
             router_args["external_gateway_info"] = (
@@ -1008,9 +1015,9 @@ class NetworkTools:
         """
         conn = get_openstack_conn()
         update_args: dict = {}
-        if name is not None:
+        if name:
             update_args["name"] = name
-        if description is not None:
+        if description:
             update_args["description"] = description
         if is_admin_state_up is not None:
             update_args["admin_state_up"] = is_admin_state_up
@@ -1114,9 +1121,9 @@ class NetworkTools:
         """
         conn = get_openstack_conn()
         args: dict = {}
-        if subnet_id is not None:
+        if subnet_id:
             args["subnet_id"] = subnet_id
-        if port_id is not None:
+        if port_id:
             args["port_id"] = port_id
         res = conn.network.remove_interface_from_router(router_id, **args)
         return RouterInterface(
@@ -1161,6 +1168,134 @@ class NetworkTools:
         if not filters:
             return {}
         attrs = dict(filters)
-        # Remove client-only or unsupported filters
         attrs.pop("status", None)
         return attrs
+
+    def get_security_groups(
+        self,
+        project_id: str | None = None,
+        name: str | None = None,
+        id: str | None = None,
+    ) -> list[SecurityGroup]:
+        """
+        Get the list of Security Groups with optional filtering.
+
+        :param project_id: Filter by project ID
+        :param name: Filter by security group name
+        :param id: Filter by security group ID
+        :return: List of SecurityGroup objects
+        """
+        conn = get_openstack_conn()
+        filters: dict = {}
+        if project_id:
+            filters["project_id"] = project_id
+        if name:
+            filters["name"] = name
+        if id:
+            filters["id"] = id
+        security_groups = conn.network.security_groups(**filters)
+        return [
+            self._convert_to_security_group_model(sg) for sg in security_groups
+        ]
+
+    def create_security_group(
+        self,
+        name: str,
+        description: str | None = None,
+        project_id: str | None = None,
+    ) -> SecurityGroup:
+        """
+        Create a new Security Group.
+
+        :param name: Security group name
+        :param description: Security group description
+        :param project_id: Project ID to assign ownership
+        :return: Created SecurityGroup object
+        """
+        conn = get_openstack_conn()
+        args: dict = {"name": name}
+        if description:
+            args["description"] = description
+        if project_id:
+            args["project_id"] = project_id
+        sg = conn.network.create_security_group(**args)
+        return self._convert_to_security_group_model(sg)
+
+    def get_security_group_detail(
+        self, security_group_id: str
+    ) -> SecurityGroup:
+        """
+        Get detailed information about a specific Security Group.
+
+        :param security_group_id: ID of the security group to retrieve
+        :return: SecurityGroup details
+        """
+        conn = get_openstack_conn()
+        sg = conn.network.get_security_group(security_group_id)
+        return self._convert_to_security_group_model(sg)
+
+    def update_security_group(
+        self,
+        security_group_id: str,
+        name: str | None = None,
+        description: str | None = None,
+    ) -> SecurityGroup:
+        """
+        Update an existing Security Group.
+
+        :param security_group_id: ID of the security group to update
+        :param name: New security group name
+        :param description: New security group description
+        :return: Updated SecurityGroup object
+        """
+        conn = get_openstack_conn()
+        update_args: dict = {}
+        if name:
+            update_args["name"] = name
+        if description:
+            update_args["description"] = description
+        if not update_args:
+            current = conn.network.get_security_group(security_group_id)
+            return self._convert_to_security_group_model(current)
+        sg = conn.network.update_security_group(
+            security_group_id, **update_args
+        )
+        return self._convert_to_security_group_model(sg)
+
+    def delete_security_group(self, security_group_id: str) -> None:
+        """
+        Delete a Security Group.
+
+        :param security_group_id: ID of the security group to delete
+        :return: None
+        """
+        conn = get_openstack_conn()
+        conn.network.delete_security_group(
+            security_group_id, ignore_missing=False
+        )
+        return None
+
+    def _convert_to_security_group_model(self, openstack_sg) -> SecurityGroup:
+        """
+        Convert an OpenStack Security Group object to a SecurityGroup pydantic model.
+
+        :param openstack_sg: OpenStack security group object
+        :return: Pydantic SecurityGroup model
+        """
+        rule_ids: list[str] | None = None
+        rules = getattr(openstack_sg, "security_group_rules", None)
+        if rules is not None:
+            dto_rules = [
+                SecurityGroupRule.model_validate(r, from_attributes=True)
+                for r in rules
+            ]
+            rule_ids = [str(r.id) for r in dto_rules if getattr(r, "id", None)]
+
+        return SecurityGroup(
+            id=openstack_sg.id,
+            name=getattr(openstack_sg, "name", None),
+            status=getattr(openstack_sg, "status", None),
+            description=getattr(openstack_sg, "description", None),
+            project_id=getattr(openstack_sg, "project_id", None),
+            security_group_rule_ids=rule_ids,
+        )

@@ -11,6 +11,7 @@ from openstack_mcp_server.tools.response.network import (
     Port,
     Router,
     RouterInterface,
+    SecurityGroup,
     Subnet,
 )
 
@@ -1367,6 +1368,138 @@ class TestNetworkTools:
         mock_conn.network.update_ip.return_value = exists
         auto = tools.assign_first_available_floating_ip("ext-net", "port-9")
         assert isinstance(auto, FloatingIP)
+
+    def test_get_security_groups_filters(self, mock_openstack_connect_network):
+        """Test getting security groups with filters."""
+        mock_conn = mock_openstack_connect_network
+
+        sg = Mock()
+        sg.id = "sg-1"
+        sg.name = "default"
+        sg.status = None
+        sg.description = "desc"
+        sg.project_id = "proj-1"
+        sg.security_group_rules = [
+            {"id": "r-1"},
+            {"id": "r-2"},
+        ]
+
+        expected_sg = SecurityGroup(
+            id="sg-1",
+            name="default",
+            status=None,
+            description="desc",
+            project_id="proj-1",
+            security_group_rule_ids=["r-1", "r-2"],
+        )
+
+        tools = self.get_network_tools()
+
+        # Test by project_id and name
+        mock_conn.network.security_groups.return_value = [sg]
+        res = tools.get_security_groups(project_id="proj-1", name="default")
+        assert res == [expected_sg]
+        mock_conn.network.security_groups.assert_called_with(
+            project_id="proj-1", name="default"
+        )
+
+        # Test by id
+        mock_conn.network.security_groups.return_value = [sg]
+        res = tools.get_security_groups(id="sg-1")
+        assert res == [expected_sg]
+        mock_conn.network.security_groups.assert_called_with(id="sg-1")
+
+    def test_create_security_group(self, mock_openstack_connect_network):
+        mock_conn = mock_openstack_connect_network
+        sg = Mock()
+        sg.id = "sg-2"
+        sg.name = "web"
+        sg.status = None
+        sg.description = "for web"
+        sg.project_id = "proj-1"
+        sg.security_group_rules = []
+        mock_conn.network.create_security_group.return_value = sg
+
+        tools = self.get_network_tools()
+        res = tools.create_security_group(
+            name="web", description="for web", project_id="proj-1"
+        )
+        assert res == SecurityGroup(
+            id="sg-2",
+            name="web",
+            status=None,
+            description="for web",
+            project_id="proj-1",
+            security_group_rule_ids=[],
+        )
+        mock_conn.network.create_security_group.assert_called_once_with(
+            name="web", description="for web", project_id="proj-1"
+        )
+
+    def test_get_security_group_detail(self, mock_openstack_connect_network):
+        mock_conn = mock_openstack_connect_network
+        sg = Mock()
+        sg.id = "sg-3"
+        sg.name = "db"
+        sg.status = None
+        sg.description = None
+        sg.project_id = None
+        sg.security_group_rules = None
+        mock_conn.network.get_security_group.return_value = sg
+
+        tools = self.get_network_tools()
+        res = tools.get_security_group_detail("sg-3")
+        assert res.id == "sg-3"
+        mock_conn.network.get_security_group.assert_called_once_with("sg-3")
+
+    def test_update_security_group(self, mock_openstack_connect_network):
+        mock_conn = mock_openstack_connect_network
+        sg = Mock()
+        sg.id = "sg-4"
+        sg.name = "new-name"
+        sg.status = None
+        sg.description = "new-desc"
+        sg.project_id = None
+        sg.security_group_rules = []
+        mock_conn.network.update_security_group.return_value = sg
+
+        tools = self.get_network_tools()
+        res = tools.update_security_group(
+            security_group_id="sg-4", name="new-name", description="new-desc"
+        )
+        assert res.name == "new-name"
+        mock_conn.network.update_security_group.assert_called_once_with(
+            "sg-4", name="new-name", description="new-desc"
+        )
+
+    def test_update_security_group_no_fields_returns_current(
+        self, mock_openstack_connect_network
+    ):
+        mock_conn = mock_openstack_connect_network
+        current = Mock()
+        current.id = "sg-5"
+        current.name = "cur"
+        current.status = None
+        current.description = None
+        current.project_id = None
+        current.security_group_rules = None
+        mock_conn.network.get_security_group.return_value = current
+
+        tools = self.get_network_tools()
+        res = tools.update_security_group("sg-5")
+        assert res.id == "sg-5"
+        mock_conn.network.get_security_group.assert_called_once_with("sg-5")
+
+    def test_delete_security_group(self, mock_openstack_connect_network):
+        mock_conn = mock_openstack_connect_network
+        mock_conn.network.delete_security_group.return_value = None
+
+        tools = self.get_network_tools()
+        res = tools.delete_security_group("sg-6")
+        assert res is None
+        mock_conn.network.delete_security_group.assert_called_once_with(
+            "sg-6", ignore_missing=False
+        )
 
     def test_get_routers_with_filters(self, mock_openstack_connect_network):
         mock_conn = mock_openstack_connect_network
