@@ -44,6 +44,8 @@ class NetworkTools:
         mcp.tool()(self.delete_port)
         mcp.tool()(self.get_port_allowed_address_pairs)
         mcp.tool()(self.set_port_binding)
+        mcp.tool()(self.add_security_group_to_port)
+        mcp.tool()(self.remove_security_group_from_port)
         mcp.tool()(self.get_floating_ips)
         mcp.tool()(self.create_floating_ip)
         mcp.tool()(self.delete_floating_ip)
@@ -513,6 +515,62 @@ class NetworkTools:
             current = conn.network.get_port(port_id)
             return self._convert_to_port_model(current)
         updated = conn.network.update_port(port_id, **update_args)
+        return self._convert_to_port_model(updated)
+
+    def add_security_group_to_port(
+        self,
+        port_id: str,
+        security_group_id: str,
+    ) -> Port:
+        """
+        Attach a Security Group to a Port.
+
+        Idempotent: if the security group is already attached, returns the current
+        port state without issuing an update.
+
+        :param port_id: Port ID
+        :param security_group_id: Security Group ID to attach
+        :return: Updated (or current) Port object
+        """
+        conn = get_openstack_conn()
+        current = conn.network.get_port(port_id)
+        current_group_ids: list[str] = list(current.security_group_ids or [])
+        if security_group_id in current_group_ids:
+            return self._convert_to_port_model(current)
+
+        updated_group_ids = current_group_ids + [security_group_id]
+        updated = conn.network.update_port(
+            port_id, security_groups=updated_group_ids
+        )
+        return self._convert_to_port_model(updated)
+
+    def remove_security_group_from_port(
+        self,
+        port_id: str,
+        security_group_id: str,
+    ) -> Port:
+        """
+        Detach a Security Group from a Port.
+
+        Idempotent: if the security group is not attached, returns the current
+        port state without issuing an update.
+
+        :param port_id: Port ID
+        :param security_group_id: Security Group ID to detach
+        :return: Updated (or current) Port object
+        """
+        conn = get_openstack_conn()
+        current = conn.network.get_port(port_id)
+        current_group_ids: list[str] = list(current.security_group_ids or [])
+        if security_group_id not in current_group_ids:
+            return self._convert_to_port_model(current)
+
+        updated_group_ids = [
+            sg_id for sg_id in current_group_ids if sg_id != security_group_id
+        ]
+        updated = conn.network.update_port(
+            port_id, security_groups=updated_group_ids
+        )
         return self._convert_to_port_model(updated)
 
     def create_port(

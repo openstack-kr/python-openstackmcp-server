@@ -869,6 +869,87 @@ class TestNetworkTools:
         )
         assert res_toggle.is_admin_state_up is True
 
+    def test_add_remove_security_group_on_port(
+        self, mock_openstack_connect_network
+    ):
+        mock_conn = mock_openstack_connect_network
+
+        # current without sg-9
+        current = Mock()
+        current.id = "port-1"
+        current.name = "p1"
+        current.status = "ACTIVE"
+        current.description = None
+        current.project_id = None
+        current.network_id = "net-1"
+        current.admin_state_up = True
+        current.is_admin_state_up = True
+        current.device_id = None
+        current.device_owner = None
+        current.mac_address = "fa:16:3e:00:00:09"
+        current.fixed_ips = []
+        current.security_group_ids = ["sg-1", "sg-2"]
+        mock_conn.network.get_port.return_value = current
+
+        # updated after add
+        updated_add = Mock()
+        updated_add.id = "port-1"
+        updated_add.name = "p1"
+        updated_add.status = "ACTIVE"
+        updated_add.description = None
+        updated_add.project_id = None
+        updated_add.network_id = "net-1"
+        updated_add.admin_state_up = True
+        updated_add.is_admin_state_up = True
+        updated_add.device_id = None
+        updated_add.device_owner = None
+        updated_add.mac_address = "fa:16:3e:00:00:09"
+        updated_add.fixed_ips = []
+        updated_add.security_group_ids = ["sg-1", "sg-2", "sg-9"]
+        mock_conn.network.update_port.return_value = updated_add
+
+        tools = self.get_network_tools()
+        res_add = tools.add_security_group_to_port("port-1", "sg-9")
+        assert isinstance(res_add, Port)
+        mock_conn.network.update_port.assert_called_with(
+            "port-1", security_groups=["sg-1", "sg-2", "sg-9"]
+        )
+
+        # idempotent add when sg already present
+        mock_conn.network.get_port.return_value = updated_add
+        res_add_again = tools.add_security_group_to_port("port-1", "sg-9")
+        assert isinstance(res_add_again, Port)
+
+        # updated after remove
+        updated_remove = Mock()
+        updated_remove.id = "port-1"
+        updated_remove.name = "p1"
+        updated_remove.status = "ACTIVE"
+        updated_remove.description = None
+        updated_remove.project_id = None
+        updated_remove.network_id = "net-1"
+        updated_remove.admin_state_up = True
+        updated_remove.is_admin_state_up = True
+        updated_remove.device_id = None
+        updated_remove.device_owner = None
+        updated_remove.mac_address = "fa:16:3e:00:00:09"
+        updated_remove.fixed_ips = []
+        updated_remove.security_group_ids = ["sg-1", "sg-2"]
+        mock_conn.network.update_port.return_value = updated_remove
+
+        res_remove = tools.remove_security_group_from_port("port-1", "sg-9")
+        assert isinstance(res_remove, Port)
+        mock_conn.network.update_port.assert_called_with(
+            "port-1", security_groups=["sg-1", "sg-2"]
+        )
+
+        # idempotent remove when sg not present
+        mock_conn.network.get_port.return_value = updated_remove
+        res_remove_again = tools.remove_security_group_from_port(
+            "port-1", "sg-9"
+        )
+        assert isinstance(res_remove_again, Port)
+
     def test_get_subnets_filters_and_has_gateway_true(
         self,
         mock_openstack_connect_network,
