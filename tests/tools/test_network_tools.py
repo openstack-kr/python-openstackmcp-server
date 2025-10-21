@@ -1768,3 +1768,137 @@ class TestNetworkTools:
         assert removed == RouterInterface(
             router_id="r-if-2", port_id="p-2", subnet_id="s-2"
         )
+
+    def test_create_security_group_rule(self, mock_openstack_connect_network):
+        mock_conn = mock_openstack_connect_network
+        rule = Mock()
+        rule.id = "r-1"
+        rule.name = None
+        rule.status = None
+        rule.description = "allow 22"
+        rule.project_id = "proj-1"
+        rule.direction = "ingress"
+        rule.ethertype = "IPv4"
+        rule.protocol = "tcp"
+        rule.port_range_min = 22
+        rule.port_range_max = 22
+        rule.remote_ip_prefix = "0.0.0.0/0"
+        rule.remote_group_id = None
+        rule.security_group_id = "sg-1"
+        mock_conn.network.create_security_group_rule.return_value = rule
+
+        tools = self.get_network_tools()
+        res = tools.create_security_group_rule(
+            security_group_id="sg-1",
+            direction="ingress",
+            ethertype="IPv4",
+            protocol="tcp",
+            port_range_min=22,
+            port_range_max=22,
+            remote_ip_prefix="0.0.0.0/0",
+            description="allow 22",
+            project_id="proj-1",
+        )
+        assert res.id == "r-1"
+        mock_conn.network.create_security_group_rule.assert_called_once()
+
+    def test_get_security_group_rule_detail(
+        self, mock_openstack_connect_network
+    ):
+        mock_conn = mock_openstack_connect_network
+        rule = Mock()
+        rule.id = "r-2"
+        rule.name = None
+        rule.status = None
+        rule.description = None
+        rule.project_id = None
+        rule.direction = "egress"
+        rule.ethertype = "IPv4"
+        rule.protocol = None
+        rule.port_range_min = None
+        rule.port_range_max = None
+        rule.remote_ip_prefix = None
+        rule.remote_group_id = None
+        rule.security_group_id = "sg-1"
+        mock_conn.network.get_security_group_rule.return_value = rule
+
+        tools = self.get_network_tools()
+        res = tools.get_security_group_rule_detail("r-2")
+        assert res.id == "r-2"
+        mock_conn.network.get_security_group_rule.assert_called_once_with(
+            "r-2"
+        )
+
+    def test_delete_security_group_rule(self, mock_openstack_connect_network):
+        mock_conn = mock_openstack_connect_network
+        mock_conn.network.delete_security_group_rule.return_value = None
+
+        tools = self.get_network_tools()
+        res = tools.delete_security_group_rule("r-3")
+        assert res is None
+        mock_conn.network.delete_security_group_rule.assert_called_once_with(
+            "r-3", ignore_missing=False
+        )
+
+    def test_create_security_group_rules_bulk(
+        self, mock_openstack_connect_network
+    ):
+        mock_conn = mock_openstack_connect_network
+        r1 = Mock()
+        r1.id = "r-10"
+        r1.name = None
+        r1.status = None
+        r1.description = None
+        r1.project_id = None
+        r1.security_group_id = "sg-1"
+        r1.direction = "ingress"
+        r1.ethertype = "IPv4"
+        r1.protocol = "tcp"
+        r1.port_range_min = 80
+        r1.port_range_max = 80
+        r1.remote_ip_prefix = "0.0.0.0/0"
+        r1.remote_group_id = None
+
+        r2 = Mock()
+        r2.id = "r-11"
+        r2.name = None
+        r2.status = None
+        r2.description = None
+        r2.project_id = None
+        r2.security_group_id = "sg-1"
+        r2.direction = "ingress"
+        r2.ethertype = "IPv4"
+        r2.protocol = "tcp"
+        r2.port_range_min = 443
+        r2.port_range_max = 443
+        r2.remote_ip_prefix = "0.0.0.0/0"
+        r2.remote_group_id = None
+
+        mock_conn.network.create_security_group_rules.return_value = [r1, r2]
+
+        tools = self.get_network_tools()
+        rules = [
+            {
+                "security_group_id": "sg-1",
+                "direction": "ingress",
+                "ethertype": "IPv4",
+                "protocol": "tcp",
+                "port_range_min": 80,
+                "port_range_max": 80,
+                "remote_ip_prefix": "0.0.0.0/0",
+            },
+            {
+                "security_group_id": "sg-1",
+                "direction": "ingress",
+                "ethertype": "IPv4",
+                "protocol": "tcp",
+                "port_range_min": 443,
+                "port_range_max": 443,
+                "remote_ip_prefix": "0.0.0.0/0",
+            },
+        ]
+        res = tools.create_security_group_rules_bulk(rules)
+        assert len(res) == 2
+        mock_conn.network.create_security_group_rules.assert_called_once_with(
+            rules=rules
+        )
