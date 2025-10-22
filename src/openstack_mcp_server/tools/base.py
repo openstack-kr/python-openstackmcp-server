@@ -1,7 +1,12 @@
+import openstack
+
+from openstack_mcp_server import config
 from openstack_mcp_server.tools.connection import ConnectionManager
 
 
 _connection_manager = ConnectionManager()
+
+openstack.enable_logging(debug=config.MCP_DEBUG_MODE)
 
 
 def get_openstack_conn():

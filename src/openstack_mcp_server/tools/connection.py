@@ -10,9 +10,6 @@ from openstack_mcp_server import config
 class ConnectionManager:
     _cloud_name = config.MCP_CLOUD_NAME
 
-    def __init__(self):
-        openstack.enable_logging(debug=config.MCP_DEBUG_MODE)
-
     def register_tools(self, mcp: FastMCP):
         mcp.tool(self.get_cloud_config)
         mcp.tool(self.get_cloud_names)
