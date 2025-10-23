@@ -1,5 +1,7 @@
 from fastmcp import FastMCP
 
+from openstack_mcp_server.tools.connection import ConnectionManager
+
 
 def register_tool(mcp: FastMCP):
     """
@@ -17,3 +19,4 @@ def register_tool(mcp: FastMCP):
     IdentityTools().register_tools(mcp)
     NetworkTools().register_tools(mcp)
     BlockStorageTools().register_tools(mcp)
+    ConnectionManager().register_tools(mcp)

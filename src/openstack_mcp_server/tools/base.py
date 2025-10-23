@@ -1,27 +1,21 @@
 import openstack
 
-from openstack import connection
-
 from openstack_mcp_server import config
+from openstack_mcp_server.tools.connection import ConnectionManager
 
 
-class OpenStackConnectionManager:
-    """OpenStack Connection Manager"""
+_connection_manager = ConnectionManager()
 
-    _connection: connection.Connection | None = None
-
-    @classmethod
-    def get_connection(cls) -> connection.Connection:
-        """OpenStack Connection"""
-        if cls._connection is None:
-            openstack.enable_logging(debug=config.MCP_DEBUG_MODE)
-            cls._connection = openstack.connect(cloud=config.MCP_CLOUD_NAME)
-        return cls._connection
-
-
-_openstack_connection_manager = OpenStackConnectionManager()
+openstack.enable_logging(debug=config.MCP_DEBUG_MODE)
 
 
 def get_openstack_conn():
-    """Get OpenStack Connection"""
-    return _openstack_connection_manager.get_connection()
+    return _connection_manager.get_connection()
+
+
+def set_openstack_cloud_name(cloud_name: str) -> None:
+    _connection_manager.set_cloud_name(cloud_name)
+
+
+def get_openstack_cloud_name() -> str:
+    return _connection_manager.get_cloud_name()
