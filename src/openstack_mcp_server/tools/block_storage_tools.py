@@ -110,7 +110,6 @@ class BlockStorageTools:
         description: str | None = None,
         volume_type: str | None = None,
         availability_zone: str | None = None,
-        bootable: bool | None = None,
         image: str | None = None,
     ) -> Volume:
         """
@@ -121,7 +120,6 @@ class BlockStorageTools:
         :param description: Optional description for the volume
         :param volume_type: Optional volume type
         :param availability_zone: Optional availability zone
-        :param bootable: Optional flag to make the volume bootable
         :param image: Optional Image name, ID or object from which to create
         :return: The created Volume object
         """
@@ -141,7 +139,6 @@ class BlockStorageTools:
         volume = conn.block_storage.create_volume(
             size=size,
             image=image,
-            bootable=bootable,
             **volume_kwargs,
         )
 
