@@ -395,7 +395,6 @@ class TestBlockStorageTools:
         mock_conn.block_storage.create_volume.assert_called_once_with(
             size=10,
             image=None,
-            bootable=None,
             name="new-volume",
             description="Test volume",
             volume_type="ssd",
@@ -435,7 +434,6 @@ class TestBlockStorageTools:
         mock_conn.block_storage.create_volume.assert_called_once_with(
             size=5,
             image=None,
-            bootable=None,
             name="minimal-volume",
         )
 
@@ -468,7 +466,6 @@ class TestBlockStorageTools:
             "Bootable volume from image",
             "ssd",
             "nova",
-            True,
             "ubuntu-20.04",
         )
 
@@ -476,12 +473,10 @@ class TestBlockStorageTools:
         assert result.name == "bootable-volume"
         assert result.id == "vol-bootable"
         assert result.size == 20
-        assert result.is_bootable
 
         mock_conn.block_storage.create_volume.assert_called_once_with(
             size=20,
             image="ubuntu-20.04",
-            bootable=True,
             name="bootable-volume",
             description="Bootable volume from image",
             volume_type="ssd",
