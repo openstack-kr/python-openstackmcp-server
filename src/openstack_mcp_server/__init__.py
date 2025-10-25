@@ -35,7 +35,7 @@ def main():
         signal.signal(signal.SIGTERM, handle_interrupt)
 
         # Validate transport protocol
-        if MCP_TRANSPORT not in ["stdio", "sse", "streamable-http"]:
+        if MCP_TRANSPORT not in ["stdio", "streamable-http"]:
             logger.error(
                 f"Invalid transport protocol: {MCP_TRANSPORT}. Using stdio instead.",
             )
