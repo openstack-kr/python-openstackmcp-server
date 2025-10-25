@@ -23,7 +23,5 @@ def serve(transport: str, **kwargs):
         mcp.run(transport="stdio", **kwargs)
     elif transport == "streamable-http":
         mcp.run(transport="streamable-http", **kwargs)
-    elif transport == "sse":
-        mcp.run(transport="sse", **kwargs)
     else:
         raise ValueError(f"Unsupported transport: {transport}")
