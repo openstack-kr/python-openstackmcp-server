@@ -774,6 +774,40 @@ class TestIdentityTools:
         # Verify mock calls
         mock_conn.identity.projects.assert_called_once()
 
+    def test_get_projects_with_name(self, mock_get_openstack_conn_identity):
+        """Test getting identity projects with a name."""
+        mock_conn = mock_get_openstack_conn_identity
+
+        # Create mock project objects
+        mock_project1 = Mock()
+        mock_project1.id = "project1111111111111111111111111"
+        mock_project1.name = "ProjectOne"
+        mock_project1.description = "Project One description"
+        mock_project1.is_enabled = True
+        mock_project1.domain_id = "domain1111111111111111111111111"
+        mock_project1.parent_id = "parentproject1111111111111111111"
+
+        mock_conn.identity.projects.return_value = [mock_project1]
+
+        # Test get_projects()
+        identity_tools = self.get_identity_tools()
+        result = identity_tools.get_projects(name="ProjectOne")
+
+        # Verify results
+        assert result[0] == Project(
+            id="project1111111111111111111111111",
+            name="ProjectOne",
+            description="Project One description",
+            is_enabled=True,
+            domain_id="domain1111111111111111111111111",
+            parent_id="parentproject1111111111111111111",
+        )
+
+        # Verify mock calls
+        mock_conn.identity.projects.assert_called_once_with(
+            name="ProjectOne",
+        )
+
     def test_get_projects_empty_list(self, mock_get_openstack_conn_identity):
         """Test getting identity projects when there are no projects."""
         mock_conn = mock_get_openstack_conn_identity

@@ -227,16 +227,23 @@ class IdentityTools:
             is_enabled=updated_domain.is_enabled,
         )
 
-    def get_projects(self) -> list[Project]:
+    def get_projects(self, name: str | None = None) -> list[Project]:
         """
         Get the list of Identity projects.
+
+        :param name: The name of the project.
+            It is used to get a project_id from a project name.
 
         :return: A list of Project objects representing the projects.
         """
         conn = get_openstack_conn()
 
+        filters = {}
+        if name:
+            filters["name"] = name
+
         project_list = []
-        for project in conn.identity.projects():
+        for project in conn.identity.projects(**filters):
             project_list.append(
                 Project(
                     id=project.id,
