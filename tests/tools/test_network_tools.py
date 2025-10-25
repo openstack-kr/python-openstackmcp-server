@@ -937,7 +937,7 @@ class TestNetworkTools:
         updated_remove.security_group_ids = ["sg-1", "sg-2"]
         mock_conn.network.update_port.return_value = updated_remove
 
-        res_remove = tools.remove_security_group_from_port("port-1", "sg-9")
+        res_remove = tools.remove_port_from_security_group("port-1", "sg-9")
         assert isinstance(res_remove, Port)
         mock_conn.network.update_port.assert_called_with(
             "port-1", security_groups=["sg-1", "sg-2"]
@@ -945,7 +945,7 @@ class TestNetworkTools:
 
         # idempotent remove when sg not present
         mock_conn.network.get_port.return_value = updated_remove
-        res_remove_again = tools.remove_security_group_from_port(
+        res_remove_again = tools.remove_port_from_security_group(
             "port-1", "sg-9"
         )
         assert isinstance(res_remove_again, Port)

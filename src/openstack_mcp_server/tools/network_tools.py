@@ -45,7 +45,7 @@ class NetworkTools:
         mcp.tool()(self.get_port_allowed_address_pairs)
         mcp.tool()(self.set_port_binding)
         mcp.tool()(self.add_port_to_security_group)
-        mcp.tool()(self.remove_security_group_from_port)
+        mcp.tool()(self.remove_port_from_security_group)
         mcp.tool()(self.get_floating_ips)
         mcp.tool()(self.create_floating_ip)
         mcp.tool()(self.delete_floating_ip)
@@ -544,7 +544,7 @@ class NetworkTools:
         )
         return self._convert_to_port_model(updated)
 
-    def remove_security_group_from_port(
+    def remove_port_from_security_group(
         self,
         port_id: str,
         security_group_id: str,
