@@ -18,9 +18,11 @@ dev = [
     "ruff>=0.12.5",
     "pre-commit>=4.2.0",
     "setuptools-scm>=9.2.0",
-]    
+]
 test = [
     "pytest>=8.4.1",
+    "coverage>=7.0",
+    "pytest-cov>=6.0.0",
 ]
 
 

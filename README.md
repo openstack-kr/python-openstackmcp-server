@@ -95,6 +95,76 @@ Get started quickly with the OpenStack MCP server using Claude Desktop
    }
    ```
 
+# Development
+
+## Setup
+
+This project supports both `uv` and `tox` for development and testing.
+
+### Using uv (Fast Local Development)
+
+```bash
+# Install dependencies (including dev and test groups)
+uv sync
+
+# Run tests
+uv run --group test pytest
+
+# Run linting
+uv run ruff check src tests
+
+# Format code
+uv run ruff format src tests
+```
+
+### Using tox (OpenStack Standard)
+
+```bash
+# Install tox
+pip install tox
+# or
+uv tool install tox
+
+# Run tests
+tox -e py3
+
+# Run linting
+tox -e pep8
+
+# Auto-format code
+tox -e format
+
+# Generate coverage report
+tox -e cover
+
+# Run arbitrary commands in virtualenv
+tox -e venv -- <command>
+
+# Test on specific Python version
+tox -e py310  # or py311, py312, py313
+
+# List all available environments
+tox list
+```
+
+## Testing
+
+The project includes comprehensive test coverage (85%+). Tests are located in the `tests/` directory.
+
+```bash
+# Run all tests
+tox -e py3
+
+# Run with coverage
+tox -e cover
+
+# Run with debugger
+tox -e debug
+
+# Run specific test file
+tox -e py3 -- tests/tools/test_compute_tools.py
+```
+
 # Contributing
 Contributions are welcome! Please see the [CONTRIBUTING](CONTRIBUTING.rst) file for details on how to contribute to this project.
 
