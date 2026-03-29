@@ -97,6 +97,10 @@ Get started quickly with the OpenStack MCP server using Claude Desktop
 
 # Development
 
+## Hosted deployment
+
+A hosted deployment is available on [Fronteir AI](https://fronteir.ai/mcp/openstack-kr-python-openstackmcp-server).
+
 ## Setup
 
 This project supports both `uv` and `tox` for development and testing.
