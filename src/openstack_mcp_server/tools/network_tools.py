@@ -44,6 +44,8 @@ class NetworkTools:
         mcp.tool()(self.delete_port)
         mcp.tool()(self.get_port_allowed_address_pairs)
         mcp.tool()(self.set_port_binding)
+        mcp.tool()(self.add_port_to_security_group)
+        mcp.tool()(self.remove_port_from_security_group)
         mcp.tool()(self.get_floating_ips)
         mcp.tool()(self.create_floating_ip)
         mcp.tool()(self.delete_floating_ip)
@@ -63,6 +65,10 @@ class NetworkTools:
         mcp.tool()(self.get_security_group_detail)
         mcp.tool()(self.update_security_group)
         mcp.tool()(self.delete_security_group)
+        mcp.tool()(self.create_security_group_rule)
+        mcp.tool()(self.get_security_group_rule_detail)
+        mcp.tool()(self.delete_security_group_rule)
+        mcp.tool()(self.create_security_group_rules_bulk)
 
     def get_networks(
         self,
@@ -509,6 +515,62 @@ class NetworkTools:
             current = conn.network.get_port(port_id)
             return self._convert_to_port_model(current)
         updated = conn.network.update_port(port_id, **update_args)
+        return self._convert_to_port_model(updated)
+
+    def add_port_to_security_group(
+        self,
+        port_id: str,
+        security_group_id: str,
+    ) -> Port:
+        """
+        Attach a Security Group to a Port.
+
+        Idempotent: if the security group is already attached, returns the current
+        port state without issuing an update.
+
+        :param port_id: Port ID
+        :param security_group_id: Security Group ID to attach
+        :return: Updated (or current) Port object
+        """
+        conn = get_openstack_conn()
+        current = conn.network.get_port(port_id)
+        current_group_ids: list[str] = list(current.security_group_ids)
+        if security_group_id in current_group_ids:
+            return self._convert_to_port_model(current)
+
+        updated_group_ids = current_group_ids + [security_group_id]
+        updated = conn.network.update_port(
+            port_id, security_groups=updated_group_ids
+        )
+        return self._convert_to_port_model(updated)
+
+    def remove_port_from_security_group(
+        self,
+        port_id: str,
+        security_group_id: str,
+    ) -> Port:
+        """
+        Detach a Security Group from a Port.
+
+        Idempotent: if the security group is not attached, returns the current
+        port state without issuing an update.
+
+        :param port_id: Port ID
+        :param security_group_id: Security Group ID to detach
+        :return: Updated (or current) Port object
+        """
+        conn = get_openstack_conn()
+        current = conn.network.get_port(port_id)
+        current_group_ids: list[str] = list(current.security_group_ids)
+        if security_group_id not in current_group_ids:
+            return self._convert_to_port_model(current)
+
+        updated_group_ids = [
+            sg_id for sg_id in current_group_ids if sg_id != security_group_id
+        ]
+        updated = conn.network.update_port(
+            port_id, security_groups=updated_group_ids
+        )
         return self._convert_to_port_model(updated)
 
     def create_port(
@@ -1171,6 +1233,25 @@ class NetworkTools:
         attrs.pop("status", None)
         return attrs
 
+    def _coerce_port(self, value) -> int | None:
+        """
+        Coerce a port value that may arrive as a string (e.g., "80") into int.
+
+        This relaxes tool input validation issues from UIs that serialize numbers
+        as strings. Only base-10 digit strings are converted; otherwise returns
+        None so the field can be omitted.
+
+        :param value: Port as int, str, or None
+        :return: int port or None
+        """
+        if isinstance(value, int):
+            return value
+        if isinstance(value, str):
+            stripped = value.strip()
+            if stripped.isdigit():
+                return int(stripped)
+        return None
+
     def get_security_groups(
         self,
         project_id: str | None = None,
@@ -1282,14 +1363,12 @@ class NetworkTools:
         :param openstack_sg: OpenStack security group object
         :return: Pydantic SecurityGroup model
         """
-        rule_ids: list[str] | None = None
         rules = getattr(openstack_sg, "security_group_rules", None)
-        if rules is not None:
-            dto_rules = [
-                SecurityGroupRule.model_validate(r, from_attributes=True)
-                for r in rules
-            ]
-            rule_ids = [str(r.id) for r in dto_rules if getattr(r, "id", None)]
+        rule_ids: list[str] | None = (
+            [r.get("id") for r in rules if r.get("id")]
+            if rules is not None
+            else None
+        )
 
         return SecurityGroup(
             id=openstack_sg.id,
@@ -1299,3 +1378,120 @@ class NetworkTools:
             project_id=getattr(openstack_sg, "project_id", None),
             security_group_rule_ids=rule_ids,
         )
+
+    def create_security_group_rule(
+        self,
+        security_group_id: str,
+        direction: str = "ingress",
+        ethertype: str = "IPv4",
+        protocol: str | None = None,
+        port_range_min: int | str | None = None,
+        port_range_max: int | str | None = None,
+        remote_ip_prefix: str | None = None,
+        remote_group_id: str | None = None,
+        description: str | None = None,
+        project_id: str | None = None,
+    ) -> SecurityGroupRule:
+        """
+        Create a Security Group Rule.
+
+        :param security_group_id: Target security group ID
+        :param direction: "ingress" or "egress"
+        :param ethertype: "IPv4" or "IPv6"
+        :param protocol: L4 protocol (e.g., "tcp", "udp", "icmp")
+        :param port_range_min: Minimum port
+        :param port_range_max: Maximum port
+        :param remote_ip_prefix: Source/destination CIDR
+        :param remote_group_id: Peer security group ID
+        :param description: Rule description
+        :param project_id: Project ownership
+        :return: Created SecurityGroupRule
+        """
+        conn = get_openstack_conn()
+        create_args: dict = {}
+        if protocol is not None:
+            create_args["protocol"] = protocol
+            coerced_min = self._coerce_port(port_range_min)
+            coerced_max = self._coerce_port(port_range_max)
+            if coerced_min is not None:
+                create_args["port_range_min"] = coerced_min
+            if coerced_max is not None:
+                create_args["port_range_max"] = coerced_max
+        if remote_ip_prefix is not None:
+            create_args["remote_ip_prefix"] = remote_ip_prefix
+        if remote_group_id is not None:
+            create_args["remote_group_id"] = remote_group_id
+        if description is not None:
+            create_args["description"] = description
+        if project_id is not None:
+            create_args["project_id"] = project_id
+
+        rule = conn.network.create_security_group_rule(
+            security_group_id=security_group_id,
+            direction=direction,
+            ethertype=ethertype,
+            **create_args,
+        )
+        return SecurityGroupRule(**rule)
+
+    def get_security_group_rule_detail(
+        self, rule_id: str
+    ) -> SecurityGroupRule:
+        """
+        Get detailed information about a specific Security Group Rule.
+
+        :param rule_id: Rule ID
+        :return: SecurityGroupRule detail
+        """
+        conn = get_openstack_conn()
+        rule = conn.network.get_security_group_rule(rule_id)
+        return SecurityGroupRule(**rule)
+
+    def delete_security_group_rule(self, rule_id: str) -> None:
+        """
+        Delete a Security Group Rule.
+
+        :param rule_id: Rule ID to delete
+        :return: None
+        """
+        conn = get_openstack_conn()
+        conn.network.delete_security_group_rule(rule_id, ignore_missing=False)
+        return None
+
+    def create_security_group_rules_bulk(
+        self,
+        rules: list[dict],
+    ) -> list[SecurityGroupRule]:
+        """
+        Create multiple Security Group Rules in bulk.
+
+        Each rule dict should follow Neutron SG rule schema keys (e.g.,
+        security_group_id, direction, ethertype, protocol, port_range_min,
+        port_range_max, remote_ip_prefix, remote_group_id, description, project_id).
+
+        :param rules: List of rule dictionaries
+        :return: List of created SecurityGroupRule models
+        """
+        conn = get_openstack_conn()
+
+        def _clean_rule_payload(raw: dict) -> dict:
+            payload = dict(raw)
+            # Remove port ranges when protocol is absent (Neutron requirement)
+            if not payload.get("protocol"):
+                payload.pop("port_range_min", None)
+                payload.pop("port_range_max", None)
+            else:
+                # Coerce possible string ports to integers
+                for key in ("port_range_min", "port_range_max"):
+                    if key in payload:
+                        coerced = self._coerce_port(payload.get(key))
+                        if coerced is None:
+                            payload.pop(key, None)
+                        else:
+                            payload[key] = coerced
+            # Drop keys explicitly set to None
+            return {k: v for k, v in payload.items() if v is not None}
+
+        cleaned_rules = [_clean_rule_payload(r) for r in rules]
+        created = conn.network.create_security_group_rules(rules=cleaned_rules)
+        return [SecurityGroupRule(**r) for r in created]
